@@ -1,9 +1,14 @@
+#!/usr/bin/env python
 """
 example of drawing a box-like spacecraft in python
     - Beard & McLain, PUP, 2012
     - Update history:  
         1/8/2019 - RWB
 """
+'''
+@Revised : Li-Jinjie
+'''
+
 import numpy as np
 
 import pyqtgraph as pg
