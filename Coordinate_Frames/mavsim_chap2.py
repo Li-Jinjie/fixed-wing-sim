@@ -8,8 +8,8 @@ import sys
 sys.path.append('..')
 
 # import viewers and video writer
-from chap2.spacecraft_viewer import spacecraft_viewer
-from chap2.video_writer import video_writer
+from Coordinate_Frames.spacecraft_viewer import spacecraft_viewer
+from Coordinate_Frames.video_writer import video_writer
 
 # import parameters
 import parameters.simulation_parameters as SIM

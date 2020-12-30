@@ -1,14 +1,20 @@
+#!/usr/bin/env python
 """
 example of drawing a box-like spacecraft in python
     - Beard & McLain, PUP, 2012
     - Update history:  
         1/8/2019 - RWB
 """
+'''
+@Revised : Li-Jinjie
+'''
+
 import numpy as np
 
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 import pyqtgraph.Vector as Vector
+
 
 class spacecraft_viewer():
     def __init__(self):
@@ -17,14 +23,14 @@ class spacecraft_viewer():
         self.window = gl.GLViewWidget()  # initialize the view object
         self.window.setWindowTitle('Spacecraft Viewer')
         self.window.setGeometry(0, 0, 1000, 1000)  # args: upper_left_x, upper_right_y, width, height
-        grid = gl.GLGridItem() # make a grid to represent the ground
-        grid.scale(20, 20, 20) # set the size of the grid (distance between each line)
-        self.window.addItem(grid) # add grid to viewer
-        self.window.setCameraPosition(distance=200) # distance from center of plot to camera
+        grid = gl.GLGridItem()  # make a grid to represent the ground
+        grid.scale(20, 20, 20)  # set the size of the grid (distance between each line)
+        self.window.addItem(grid)  # add grid to viewer
+        self.window.setCameraPosition(distance=200)  # distance from center of plot to camera
         self.window.setBackgroundColor('k')  # set background color to black
         self.window.show()  # display configured window
-        self.window.raise_() # bring window to the front
-        self.plot_initialized = False # has the spacecraft been plotted yet?
+        self.window.raise_()  # bring window to the front
+        self.plot_initialized = False  # has the spacecraft been plotted yet?
         # get points that define the non-rotated, non-translated spacecraft and the mesh colors
         self.points, self.meshColors = self._get_spacecraft_points()
 
@@ -59,7 +65,7 @@ class spacecraft_viewer():
         if not self.plot_initialized:
             # initialize drawing of triangular mesh.
             self.body = gl.GLMeshItem(vertexes=mesh,  # defines the triangular mesh (Nx3x3)
-                                      vertexColors=self.meshColors, # defines mesh colors (Nx1)
+                                      vertexColors=self.meshColors,  # defines mesh colors (Nx1)
                                       drawEdges=True,  # draw edges between mesh elements
                                       smooth=False,  # speeds up rendering
                                       computeNormals=False)  # speeds up rendering
@@ -86,7 +92,7 @@ class spacecraft_viewer():
 
     def _translate_points(self, points, translation):
         "Translate points by the vector translation"
-        translated_points = points + np.dot(translation, np.ones([1,points.shape[1]]))
+        translated_points = points + np.dot(translation, np.ones([1, points.shape[1]]))
         return translated_points
 
     def _get_spacecraft_points(self):
@@ -94,20 +100,24 @@ class spacecraft_viewer():
             Points that define the spacecraft, and the colors of the triangular mesh
             Define the points on the aircraft following diagram in Figure C.3
         """
-        #points are in NED coordinates
-        points = np.array([[1, 1, 0],  # point 1
-                           [1, -1, 0],  # point 2
-                           [-1, -1, 0],  # point 3
-                           [-1, 1, 0],  # point 4
-                           [1, 1, -2],  # point 5
-                           [1, -1, -2],  # point 6
-                           [-1, -1, -2],  # point 7
-                           [-1, 1, -2],  # point 8
-                           [1.5, 1.5, 0],  # point 9
-                           [1.5, -1.5, 0],  # point 10
-                           [-1.5, -1.5, 0],  # point 11
-                           [-1.5, 1.5, 0],  # point 12
-                          ]).T
+        # points are in NED coordinates
+        points = np.array([[1.5, 0, 0.2],  # point 1
+                           [0.8, 0.4, -0.4],  # point 2
+                           [0.8, -0.4, -0.4],  # point 3
+                           [0.8, -0.4, 0.4],  # point 4
+                           [0.8, 0.4, 0.4],  # point 5
+                           [-4, 0, 0],  # point 6
+                           [0, -3, 0],  # point 7
+                           [-1.5, -3, 0],  # point 8
+                           [-1.5, 3, 0],  # point 9
+                           [0, 3, 0],  # point 10
+                           [-3, 1, 0],  # point 11
+                           [-4, 1, 0],  # point 12
+                           [-4, -1, 0],  # point 13
+                           [-3, -1, 0],  # point 14
+                           [-3, 0, 0],  # point 15
+                           [-4, 0, -1]  # point 16
+                           ]).T
         # scale points for better rendering
         scale = 10
         points = scale * points
@@ -117,19 +127,20 @@ class spacecraft_viewer():
         green = np.array([0., 1., 0., 1])
         blue = np.array([0., 0., 1., 1])
         yellow = np.array([1., 1., 0., 1])
-        meshColors = np.empty((12, 3, 4), dtype=np.float32)
-        meshColors[0] = yellow  # front
-        meshColors[1] = yellow  # front
-        meshColors[2] = blue  # back
-        meshColors[3] = blue  # back
-        meshColors[4] = blue  # right
-        meshColors[5] = blue  # right
-        meshColors[6] = blue  # left
-        meshColors[7] = blue  # left
-        meshColors[8] = blue  # top
-        meshColors[9] = blue  # top
-        meshColors[10] = green  # bottom
-        meshColors[11] = green  # bottom
+        meshColors = np.empty((13, 3, 4), dtype=np.float32)
+        meshColors[0] = yellow  # head
+        meshColors[1] = yellow  # head
+        meshColors[2] = yellow  # head
+        meshColors[3] = yellow  # head
+        meshColors[4] = blue  # body
+        meshColors[5] = blue  # body
+        meshColors[6] = blue  # body
+        meshColors[7] = blue  # body
+        meshColors[8] = green  # wing
+        meshColors[9] = green  # wing
+        meshColors[10] = green  # tail_h
+        meshColors[11] = green  # tail_h
+        meshColors[12] = blue  # tail_v
         return points, meshColors
 
     def _points_to_mesh(self, points):
@@ -138,19 +149,20 @@ class spacecraft_viewer():
         Each mesh face is defined by three 3D points
           (a rectangle requires two triangular mesh faces)
         """
-        points=points.T
-        mesh = np.array([[points[0], points[1], points[5]],  # front
-                         [points[0], points[4], points[5]],  # front
-                         [points[3], points[2], points[6]],  # back
-                         [points[3], points[7], points[6]],  # back
-                         [points[3], points[0], points[4]],  # right
-                         [points[3], points[7], points[4]],  # right
-                         [points[2], points[1], points[5]],  # left
-                         [points[2], points[6], points[5]],  # left
-                         [points[7], points[4], points[5]],  # top
-                         [points[7], points[6], points[5]],  # top
-                         [points[11], points[8], points[9]],  # bottom
-                         [points[11], points[10], points[9]],  # bottom
+        points = points.T
+        mesh = np.array([[points[0], points[1], points[2]],  # head 123
+                         [points[0], points[2], points[3]],  # head 134
+                         [points[0], points[3], points[4]],  # head 145
+                         [points[0], points[1], points[4]],  # head 125
+                         [points[1], points[2], points[5]],  # body 236
+                         [points[2], points[3], points[5]],  # body 346
+                         [points[3], points[4], points[5]],  # body 456
+                         [points[1], points[4], points[5]],  # body 256
+                         [points[6], points[7], points[8]],  # wing 789
+                         [points[6], points[8], points[9]],  # wing 7910
+                         [points[10], points[11], points[12]],  # tail_h 11 12 13
+                         [points[10], points[12], points[13]],  # tail_h 11 13 14
+                         [points[5], points[14], points[15]],  # tail_v 6 15 16
                          ])
         return mesh
 
@@ -177,4 +189,3 @@ class spacecraft_viewer():
                           [0, 0, 1]])
         R = R_roll @ R_pitch @ R_yaw  # inertial to body (Equation 2.4 in book)
         return R.T  # transpose to return body to inertial
-
