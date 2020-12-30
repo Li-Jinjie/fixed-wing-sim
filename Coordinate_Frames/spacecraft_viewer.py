@@ -101,7 +101,7 @@ class spacecraft_viewer():
             Define the points on the aircraft following diagram in Figure C.3
         """
         # points are in NED coordinates
-        points = np.array([[1.5, 0, 0.2],  # point 1
+        points = np.array([[1.5, 0, 0],  # point 1
                            [0.8, 0.4, -0.4],  # point 2
                            [0.8, -0.4, -0.4],  # point 3
                            [0.8, -0.4, 0.4],  # point 4
