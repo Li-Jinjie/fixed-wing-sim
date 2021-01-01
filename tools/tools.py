@@ -6,7 +6,6 @@
 import numpy as np
 
 
-# TODO: 检查这个程序的正确性
 def Quaternion2Euler(quaternion):
     '''
     Conversion from quaternions to euler angles, page 259
@@ -47,3 +46,16 @@ def Euler2Quaternion(phi, theta, psi):
     e[3] = s_psi_2 * c_theta_2 * c_phi_2 - c_psi_2 * s_theta_2 * s_phi_2
 
     return e
+
+
+if __name__ == "__main__":
+    phi = 120 * np.pi / 180
+    theta = 10 * np.pi / 180
+    psi = -11 * np.pi / 180
+    e = Euler2Quaternion(phi, theta, psi)
+    print("quaternions is ", e)
+
+    phi_new, theta_new, psi_new = Quaternion2Euler(e)
+    print("the Euler angle is ", phi_new * 180 / np.pi, theta_new * 180 / np.pi, psi_new * 180 / np.pi)
+
+    # After test, there is small quantization error in the conversion.
