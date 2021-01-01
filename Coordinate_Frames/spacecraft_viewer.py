@@ -7,6 +7,7 @@ example of drawing a box-like spacecraft in python
 """
 '''
 @Revised : Li-Jinjie
+@Date    : 2020/12/30
 '''
 
 import numpy as np
@@ -87,7 +88,7 @@ class spacecraft_viewer():
     # private functions
     def _rotate_points(self, points, R):
         "Rotate points by the rotation matrix R"
-        rotated_points = R @ points
+        rotated_points = R @ points   # @ means matmul() in numpy. matrix multiply
         return rotated_points
 
     def _translate_points(self, points, translation):
@@ -180,12 +181,12 @@ class spacecraft_viewer():
 
         R_roll = np.array([[1, 0, 0],
                            [0, c_phi, s_phi],
-                           [0, -s_phi, c_phi]])
+                           [0, -s_phi, c_phi]], dtype=object)
         R_pitch = np.array([[c_theta, 0, -s_theta],
                             [0, 1, 0],
-                            [s_theta, 0, c_theta]])
+                            [s_theta, 0, c_theta]], dtype=object)
         R_yaw = np.array([[c_psi, s_psi, 0],
                           [-s_psi, c_psi, 0],
-                          [0, 0, 1]])
+                          [0, 0, 1]], dtype=object)
         R = R_roll @ R_pitch @ R_yaw  # inertial to body (Equation 2.4 in book)
         return R.T  # transpose to return body to inertial
