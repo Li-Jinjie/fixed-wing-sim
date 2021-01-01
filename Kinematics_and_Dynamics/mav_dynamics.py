@@ -9,6 +9,10 @@ part of mavsimPy
         12/17/2018 - RWB
         1/14/2019 - RWB
 """
+'''
+@Revised : Li-Jinjie
+@Date    : 2021/01/01
+'''
 import sys
 sys.path.append('..')
 import numpy as np
