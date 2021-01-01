@@ -38,20 +38,20 @@ while sim_time < SIM.end_time:
     # -------vary forces and moments to check dynamics-------------
     fx = 10
     fy = 0  # 10
-    fz = 0  # 10
-    Mx = 0  # 0.1
+    fz = -2  # 10
+    Mx = 0.1  # 0.1
     My = 0  # 0.1
     Mz = 0  # 0.1
     forces_moments = np.array([[fx, fy, fz, Mx, My, Mz]]).T
 
     # -------physical system-------------
-    mav.update(forces_moments)  # propagate the MAV dynamics
+    mav.update_state(forces_moments)  # propagate the MAV dynamics
 
     # -------update viewer-------------
-    mav_view.update(mav.true_state)  # plot body of MAV
-    data_view.update(mav.true_state,  # true states
-                     mav.true_state,  # estimated states
-                     mav.true_state,  # commanded states
+    mav_view.update(mav.msg_true_state)  # plot body of MAV
+    data_view.update(mav.msg_true_state,  # true states
+                     mav.msg_true_state,  # estimated states
+                     mav.msg_true_state,  # commanded states
                      SIM.ts_simulation)
     if VIDEO == True: video.update(sim_time)
 

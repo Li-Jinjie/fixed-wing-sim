@@ -181,12 +181,12 @@ class spacecraft_viewer():
 
         R_roll = np.array([[1, 0, 0],
                            [0, c_phi, s_phi],
-                           [0, -s_phi, c_phi]])
+                           [0, -s_phi, c_phi]], dtype=object)
         R_pitch = np.array([[c_theta, 0, -s_theta],
                             [0, 1, 0],
-                            [s_theta, 0, c_theta]])
+                            [s_theta, 0, c_theta]], dtype=object)
         R_yaw = np.array([[c_psi, s_psi, 0],
                           [-s_psi, c_psi, 0],
-                          [0, 0, 1]])
+                          [0, 0, 1]], dtype=object)
         R = R_roll @ R_pitch @ R_yaw  # inertial to body (Equation 2.4 in book)
         return R.T  # transpose to return body to inertial
