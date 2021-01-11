@@ -5,6 +5,7 @@ mav_dynamics
     
 """
 import sys
+
 sys.path.append('..')
 import numpy as np
 
@@ -12,7 +13,8 @@ import numpy as np
 from message_types.msg_state import msg_state
 
 import parameters.aerosonde_parameters as MAV
-from tools.tools import Quaternion2Rotation, Quaternion2Euler
+from tools.tools import Quaternion2Euler
+
 
 class mav_dynamics:
     def __init__(self, Ts):
@@ -24,18 +26,18 @@ class mav_dynamics:
         # self.true_state is a 19x1 vector that is estimated and used by the autopilot to control the aircraft:
         # true_state = [pn, pe, h, Va, alpha, beta, phi, theta, chi, p, q, r, Vg, wn, we, psi, gyro_bx, gyro_by, gyro_bz]
         self._state = np.array([[MAV.pn0],  # (0)
-                               [MAV.pe0],   # (1)
-                               [MAV.pd0],   # (2)
-                               [MAV.u0],    # (3)
-                               [MAV.v0],    # (4)
-                               [MAV.w0],    # (5)
-                               [MAV.e0],    # (6)
-                               [MAV.e1],    # (7)
-                               [MAV.e2],    # (8)
-                               [MAV.e3],    # (9)
-                               [MAV.p0],    # (10)
-                               [MAV.q0],    # (11)
-                               [MAV.r0]])   # (12)
+                                [MAV.pe0],  # (1)
+                                [MAV.pd0],  # (2)
+                                [MAV.u0],  # (3)
+                                [MAV.v0],  # (4)
+                                [MAV.w0],  # (5)
+                                [MAV.e0],  # (6)
+                                [MAV.e1],  # (7)
+                                [MAV.e2],  # (8)
+                                [MAV.e3],  # (9)
+                                [MAV.p0],  # (10)
+                                [MAV.q0],  # (11)
+                                [MAV.r0]])  # (12)
         # store wind data for fast recall since it is used at various points in simulation
         self._wind = np.array([[0.], [0.], [0.]])  # wind in NED frame in meters/sec
         self._update_velocity_data()
@@ -62,21 +64,21 @@ class mav_dynamics:
         # Integrate ODE using Runge-Kutta RK4 algorithm
         time_step = self._ts_simulation
         k1 = self._derivatives(self._state, forces_moments)
-        k2 = self._derivatives(self._state + time_step/2.*k1, forces_moments)
-        k3 = self._derivatives(self._state + time_step/2.*k2, forces_moments)
-        k4 = self._derivatives(self._state + time_step*k3, forces_moments)
-        self._state += time_step/6 * (k1 + 2*k2 + 2*k3 + k4)
+        k2 = self._derivatives(self._state + time_step / 2. * k1, forces_moments)
+        k3 = self._derivatives(self._state + time_step / 2. * k2, forces_moments)
+        k4 = self._derivatives(self._state + time_step * k3, forces_moments)
+        self._state += time_step / 6 * (k1 + 2 * k2 + 2 * k3 + k4)
 
         # normalize the quaternion
         e0 = self._state.item(6)
         e1 = self._state.item(7)
         e2 = self._state.item(8)
         e3 = self._state.item(9)
-        normE = np.sqrt(e0**2+e1**2+e2**2+e3**2)
-        self._state[6][0] = self._state.item(6)/normE
-        self._state[7][0] = self._state.item(7)/normE
-        self._state[8][0] = self._state.item(8)/normE
-        self._state[9][0] = self._state.item(9)/normE
+        normE = np.sqrt(e0 ** 2 + e1 ** 2 + e2 ** 2 + e3 ** 2)
+        self._state[6][0] = self._state.item(6) / normE
+        self._state[7][0] = self._state.item(7) / normE
+        self._state[8][0] = self._state.item(8) / normE
+        self._state[9][0] = self._state.item(9) / normE
 
         # update the airspeed, angle of attack, and side slip angles using new state
         self._update_velocity_data(wind)
@@ -89,7 +91,7 @@ class mav_dynamics:
     def _derivatives(self, state, forces_moments):
         return x_dot
 
-    def _update_velocity_data(self, wind=np.zeros((6,1))):
+    def _update_velocity_data(self, wind=np.zeros((6, 1))):
         # compute airspeed
         self._Va =
         # compute angle of attack
