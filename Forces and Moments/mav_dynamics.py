@@ -13,7 +13,7 @@ import numpy as np
 from message_types.msg_state import msg_state
 
 import parameters.aerosonde_parameters as MAV
-from tools.tools import Quaternion2Euler
+from tools.tools import *
 
 
 class mav_dynamics:
@@ -62,6 +62,7 @@ class mav_dynamics:
         forces_moments = self._forces_moments(delta)
 
         # Integrate ODE using Runge-Kutta RK4 algorithm
+        # TODO: The formulas of k2 and k3 are different from the definitions in wikipedia.
         time_step = self._ts_simulation
         k1 = self._derivatives(self._state, forces_moments)
         k2 = self._derivatives(self._state + time_step / 2. * k1, forces_moments)
@@ -89,15 +90,79 @@ class mav_dynamics:
     ###################################
     # private functions
     def _derivatives(self, state, forces_moments):
+        """
+        for the dynamics xdot = f(x, u), returns f(x, u)
+        """
+        # extract the states
+        pn = state.item(0)
+        pe = state.item(1)
+        pd = state.item(2)
+        u = state.item(3)
+        v = state.item(4)
+        w = state.item(5)
+        e0 = state.item(6)
+        e1 = state.item(7)
+        e2 = state.item(8)
+        e3 = state.item(9)
+        p = state.item(10)
+        q = state.item(11)
+        r = state.item(12)
+        #   extract forces/moments
+        fx = forces_moments.item(0)
+        fy = forces_moments.item(1)
+        fz = forces_moments.item(2)
+        l = forces_moments.item(3)
+        m = forces_moments.item(4)
+        n = forces_moments.item(5)
+
+        # From page 256, Appendix B.2
+        # B.1 - B.4
+        # position kinematics
+        pn_dot = (e1 ** 2 + e0 ** 2 - e2 ** 2 - e3 ** 2) * u + 2 * (e1 * e2 - e3 * e0) * v + 2 * (e1 * e3 + e2 * e0) * w
+        pe_dot = 2 * (e1 * e2 + e3 * e0) * u + (e2 ** 2 + e0 ** 2 - e1 ** 2 - e3 ** 2) * v + 2 * (e2 * e3 - e1 * e0) * w
+        pd_dot = 2 * (e1 * e3 - e2 * e0) * u + 2 * (e2 * e3 + e1 * e0) * v + (e3 ** 2 + e0 ** 2 - e1 ** 2 - e2 ** 2) * w
+
+        # position dynamics
+        u_dot = r * v - q * w + fx / MAV.mass
+        v_dot = p * w - r * u + fy / MAV.mass
+        w_dot = q * u - p * v + fz / MAV.mass
+
+        # rotational kinematics
+        e0_dot = (0 - p * e1 - q * e2 - r * e3) / 2
+        e1_dot = (p * e0 + 0 + r * e2 - q * e3) / 2
+        e2_dot = (q * e0 - r * e1 + 0 + p * e3) / 2
+        e3_dot = (r * e0 + q * e1 - p * e2 + 0) / 2
+
+        # rotatonal dynamics
+        p_dot = MAV.gamma1 * p * q - MAV.gamma2 * q * r + MAV.gamma3 * l + MAV.gamma4 * n
+        q_dot = MAV.gamma5 * p * r - MAV.gamma6 * (p ** 2 - r ** 2) + m / MAV.Jy
+        r_dot = MAV.gamma7 * p * q - MAV.gamma1 * q * r + MAV.gamma4 * l + MAV.gamma8 * n
+
+        # collect the derivative of the states
+        x_dot = np.array([[pn_dot, pe_dot, pd_dot, u_dot, v_dot, w_dot,
+                           e0_dot, e1_dot, e2_dot, e3_dot, p_dot, q_dot, r_dot]]).T
         return x_dot
 
     def _update_velocity_data(self, wind=np.zeros((6, 1))):
+        # the formula in page 57
+        if wind[0] != 0:  # if activate the wind simulation
+            # TODO: coordinate transformation using quaternion
+            phi, theta, psi = Quaternion2Euler(self._state[6:10])
+            R = Euler2Rotation(phi, theta, psi)  # R: body to inertial  R.T: inertial to body
+            V_w = R.T @ wind[0:3] + wind[3:]  # in the body frame
+        else:
+            V_w = np.zeros((3, 1))
+
+        u_r = self._state[3][0] - V_w[0][0]
+        v_r = self._state[4][0] - V_w[1][0]
+        w_r = self._state[5][0] - V_w[2][0]
+
         # compute airspeed
-        self._Va =
+        self._Va = np.sqrt(u_r ** 2, v_r ** 2, w_r ** 2)
         # compute angle of attack
-        self._alpha =
+        self._alpha = np.arctan2(w_r, u_r)
         # compute sideslip angle
-        self._beta =
+        self._beta = np.arcsin(v_r / self._Va)
 
     def _forces_moments(self, delta):
         """
