@@ -170,6 +170,56 @@ class mav_dynamics:
         :param delta: np.matrix(delta_a, delta_e, delta_r, delta_t)
         :return: Forces and Moments on the UAV np.matrix(Fx, Fy, Fz, Ml, Mn, Mm)
         """
+        delta_a = delta[0]
+        delta_e = delta[1]
+        delta_r = delta[2]
+        delta_t = delta[3]
+
+        e0 = self._state.item(6)
+        e1 = self._state.item(7)
+        e2 = self._state.item(8)
+        e3 = self._state.item(9)
+
+        p = self._state.item(10)
+        q = self._state.item(11)
+        r = self._state.item(12)
+
+        # ---- calculate C_L, in page 63 ----
+        term_1 = np.exp(-MAV.M * (self._alpha - MAV.alpha0))
+        term_2 = np.exp(MAV.M * (self._alpha + MAV.alpha0))
+        sigma = (1 + term_1 + term_2) / ((1 + term_1) * (1 + term_2))
+        C_L = (1 - sigma) * (MAV.C_L_0 + MAV.C_L_alpha * self._alpha) + sigma * (
+                2 * np.sign(self._alpha) * (np.sin(self._alpha) ** 2) * np.cos(self._alpha))
+
+        # C_L = MAV.C_L_0 + MAV.C_L_alpha * self._alpha   # linear model
+
+        # ---- calculate C_D, in page 63 ----
+        C_D = MAV.C_D_p + (MAV.C_L_0 + MAV.C_L_alpha * self._alpha) ** 2 / (np.pi * MAV.e * MAV.AR)
+        # The e here is the Oswald efficiency factor, NOT the euler number.
+
+        # C_D = MAV.C_D_0 + MAV.C_D_alpha * self._alpha   # linear model
+
+        # ---- calculate C_X(alpha).etc, in page 62 ----
+        c_alpha = np.cos(self._alpha)
+        s_alpha = np.sin(self._alpha)
+        C_X = - C_D * c_alpha + C_L * s_alpha
+        C_X_q = - MAV.C_D_q * c_alpha + MAV.C_L_q * s_alpha
+        C_X_delta_e = -MAV.C_D_delta_e * c_alpha + MAV.C_L_delta_e * s_alpha
+        C_Z = - C_D * s_alpha - C_L * c_alpha
+        C_Z_q = - MAV.C_D_q * s_alpha - MAV.C_L_q * c_alpha
+        C_Z_delta_e = - MAV.C_D_delta_e * s_alpha - MAV.C_L_delta_e * c_alpha
+
+        # The first term is gravity. Please read page 257.
+        # TODO: check
+        rVS_2 = MAV.rho * (self._Va ** 2) * MAV.S_wing / 2
+        fx = MAV.mass * MAV.gravity * 2 * (e1 * e3 - e2 * e0) + \
+             rVS_2 * (C_X + C_X_q * MAV.c / (2 * self._Va) * q + C_X_delta_e * delta_e)
+
+        fy = MAV.mass * MAV.gravity * 2 * (e2 * e3 + e1 * e0) + \
+             rVS_2 * (MAV.C_Y_0 + MAV.C_Y_beta * self._beta + MAV.C_Y_p * MAV.b / (2 * self._Va) * p + \
+                      MAV.C_Y_r * MAV.b / (2 * self._Va) * r + MAV.C_Y_delta_a * delta_a + MAV.C_Y_delta_r * delta_r)
+
+        fz = MAV.mass * MAV.gravity * (e3 ** 2 + e0 ** 2 - e1 ** 2 - e2 ** 2) +
         self._forces[0] = fx
         self._forces[1] = fy
         self._forces[2] = fz
