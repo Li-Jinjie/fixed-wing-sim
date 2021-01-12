@@ -14,8 +14,8 @@ import parameters.simulation_parameters as SIM
 from Coordinate_Frames.spacecraft_viewer import spacecraft_viewer
 from Coordinate_Frames.video_writer import video_writer
 from Kinematics_and_Dynamics.data_viewer import data_viewer
-from .mav_dynamics import mav_dynamics
-from .wind_simulation import wind_simulation
+from Forces_and_Moments.mav_dynamics import mav_dynamics
+from Forces_and_Moments.wind_simulation import wind_simulation
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
@@ -38,11 +38,11 @@ sim_time = SIM.start_time
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
     # -------set control surfaces-------------
-    delta_e = -0.2
-    delta_t = 0.5
-    delta_a = 0.0
-    delta_r = 0.005
-    delta = np.array([[delta_e, delta_t, delta_a, delta_r]]).T  # transpose to make it a column vector
+    delta_e = -0.02  # -0.2
+    delta_t = 0.8   # 0.5
+    delta_a = 0.0   # 0.001
+    delta_r = 0.000  # 0.005
+    delta = np.array([[delta_a, delta_e, delta_r, delta_t]]).T  # transpose to make it a column vector
 
     # -------physical system-------------
     if wind_flag is True:

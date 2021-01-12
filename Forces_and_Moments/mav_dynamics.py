@@ -158,7 +158,7 @@ class mav_dynamics:
         w_r = self._state[5][0] - V_w[2][0]
 
         # compute airspeed
-        self._Va = np.sqrt(u_r ** 2, v_r ** 2, w_r ** 2)
+        self._Va = np.sqrt(u_r ** 2 + v_r ** 2 + w_r ** 2)
         # compute angle of attack
         self._alpha = np.arctan2(w_r, u_r)
         # compute sideslip angle
@@ -168,7 +168,7 @@ class mav_dynamics:
         """
         return the forces on the UAV based on the state, wind, and control surfaces
         :param delta: np.matrix(delta_a, delta_e, delta_r, delta_t)
-        :return: Forces and Moments on the UAV np.matrix(Fx, Fy, Fz, Ml, Mn, Mm)
+        :return: Forces_and_Moments on the UAV np.matrix(Fx, Fy, Fz, Ml, Mn, Mm)
         """
         delta_a = delta[0]
         delta_e = delta[1]
@@ -212,17 +212,35 @@ class mav_dynamics:
         # The first term is gravity. Please read page 257.
         # TODO: check
         rVS_2 = MAV.rho * (self._Va ** 2) * MAV.S_wing / 2
-        fx = MAV.mass * MAV.gravity * 2 * (e1 * e3 - e2 * e0) + \
-             rVS_2 * (C_X + C_X_q * MAV.c / (2 * self._Va) * q + C_X_delta_e * delta_e)
 
-        fy = MAV.mass * MAV.gravity * 2 * (e2 * e3 + e1 * e0) + \
-             rVS_2 * (MAV.C_Y_0 + MAV.C_Y_beta * self._beta + MAV.C_Y_p * MAV.b / (2 * self._Va) * p + \
-                      MAV.C_Y_r * MAV.b / (2 * self._Va) * r + MAV.C_Y_delta_a * delta_a + MAV.C_Y_delta_r * delta_r)
+        fx = MAV.mass * MAV.gravity * 2 * (e1 * e3 - e2 * e0) \
+             + rVS_2 * (C_X + C_X_q * MAV.c / (2 * self._Va) * q + C_X_delta_e * delta_e) \
+             + 1 / 2 * MAV.rho * MAV.S_prop * MAV.C_prop * ((MAV.k_motor * delta_t) ** 2 - self._Va ** 2)
 
-        fz = MAV.mass * MAV.gravity * (e3 ** 2 + e0 ** 2 - e1 ** 2 - e2 ** 2) +
+        fy = MAV.mass * MAV.gravity * 2 * (e2 * e3 + e1 * e0) \
+             + rVS_2 * (MAV.C_Y_0 + MAV.C_Y_beta * self._beta + MAV.C_Y_p * MAV.b / (2 * self._Va) * p +
+                        MAV.C_Y_r * MAV.b / (2 * self._Va) * r + MAV.C_Y_delta_a * delta_a + MAV.C_Y_delta_r * delta_r)
+
+        fz = MAV.mass * MAV.gravity * (e3 ** 2 + e0 ** 2 - e1 ** 2 - e2 ** 2) \
+             + rVS_2 * (C_Z + C_Z_q * MAV.c / (2 * self._Va) * q + C_Z_delta_e * delta_e)
+
         self._forces[0] = fx
         self._forces[1] = fy
         self._forces[2] = fz
+
+        # Pay attention: to distinguish between L(lift) and l(the torque along x axis), denote l as ell.
+        Mx = rVS_2 * MAV.b * \
+             (MAV.C_ell_0 + MAV.C_ell_beta * self._beta + MAV.C_ell_p * MAV.b / (2 * self._Va) * p +
+              MAV.C_ell_r * MAV.b / (2 * self._Va) * r + MAV.C_ell_delta_a * delta_a + MAV.C_ell_delta_r * delta_r) \
+             - MAV.kTp * (MAV.kOmega * delta_t) ** 2
+
+        My = rVS_2 * MAV.c * (MAV.C_m_0 + MAV.C_m_alpha * self._alpha +
+                              MAV.C_m_q * MAV.c / (2 * self._Va) * q + MAV.C_m_delta_e * delta_e)
+
+        Mz = rVS_2 * MAV.b * \
+             (MAV.C_n_0 + MAV.C_n_beta * self._beta + MAV.C_n_p * MAV.b / (2 * self._Va) * p +
+              MAV.C_n_r * MAV.b / (2 * self._Va) * r + MAV.C_n_delta_a * delta_a + MAV.C_n_delta_r * delta_r)
+
         return np.array([[fx, fy, fz, Mx, My, Mz]]).T
 
     def _update_msg_true_state(self):
@@ -238,9 +256,9 @@ class mav_dynamics:
         self.msg_true_state.phi = phi
         self.msg_true_state.theta = theta
         self.msg_true_state.psi = psi
-        self.msg_true_state.Vg =
-        self.msg_true_state.gamma =
-        self.msg_true_state.chi =
+        # self.msg_true_state.Vg =
+        # self.msg_true_state.gamma =
+        # self.msg_true_state.chi =
         self.msg_true_state.p = self._state.item(10)
         self.msg_true_state.q = self._state.item(11)
         self.msg_true_state.r = self._state.item(12)

@@ -10,7 +10,8 @@ from tools.transfer_function import transfer_function
 import numpy as np
 import parameters.wind_parameters as w_para
 
-# TODO: According to the book, the Va here should be the same as Va in mav_dynamics.py. But I give it a constant here.
+# TODO: According to the book, Va here should be the same as Va in mav_dynamics.py. But I give it a constant here.
+#  However, if Va is time-variant, the wind system becomes a time-variant system, which should be considered carefully.
 Va = 20  # m/s^2
 sqrt_3 = np.sqrt(3)
 
