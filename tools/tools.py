@@ -48,14 +48,42 @@ def Euler2Quaternion(phi, theta, psi):
     return e
 
 
+def Euler2Rotation(phi, theta, psi):
+    """
+    Converts euler angles to rotation matrix (R_b^i, i.e., body to inertial)
+    """
+    # only call sin and cos once for each angle to speed up rendering
+    c_phi = np.cos(phi)
+    s_phi = np.sin(phi)
+    c_theta = np.cos(theta)
+    s_theta = np.sin(theta)
+    c_psi = np.cos(psi)
+    s_psi = np.sin(psi)
+
+    R_roll = np.array([[1, 0, 0],
+                       [0, c_phi, s_phi],
+                       [0, -s_phi, c_phi]], dtype=object)
+    R_pitch = np.array([[c_theta, 0, -s_theta],
+                        [0, 1, 0],
+                        [s_theta, 0, c_theta]], dtype=object)
+    R_yaw = np.array([[c_psi, s_psi, 0],
+                      [-s_psi, c_psi, 0],
+                      [0, 0, 1]], dtype=object)
+    R = R_roll @ R_pitch @ R_yaw  # inertial to body (Equation 2.4 in book)
+    return R.T  # transpose to return body to inertial
+
+
 if __name__ == "__main__":
     phi = 120 * np.pi / 180
     theta = 10 * np.pi / 180
     psi = -11 * np.pi / 180
     e = Euler2Quaternion(phi, theta, psi)
-    print("quaternions is ", e)
+    print("The quaternions is ", e)
 
     phi_new, theta_new, psi_new = Quaternion2Euler(e)
-    print("the Euler angle is ", phi_new * 180 / np.pi, theta_new * 180 / np.pi, psi_new * 180 / np.pi)
+    print("The euler angle is ", phi_new * 180 / np.pi, theta_new * 180 / np.pi, psi_new * 180 / np.pi)
+
+    R = Euler2Rotation(phi, theta, psi)
+    print("The rotation matrix is ", R)
 
     # After test, there is small quantization error in the conversion.
