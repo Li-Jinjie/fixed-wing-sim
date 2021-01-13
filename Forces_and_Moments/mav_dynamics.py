@@ -145,11 +145,12 @@ class mav_dynamics:
 
     def _update_velocity_data(self, wind=np.zeros((6, 1))):
         # the formula in page 57
-        if wind[0] != 0:  # if activate the wind simulation
+        if wind[0][0] != 0:  # if activate the wind simulation
             # TODO: coordinate transformation using quaternion
             phi, theta, psi = Quaternion2Euler(self._state[6:10])
             R = Euler2Rotation(phi, theta, psi)  # R: body to inertial  R.T: inertial to body
             V_w = R.T @ wind[0:3] + wind[3:]  # in the body frame
+            self._wind = R @ V_w
         else:
             V_w = np.zeros((3, 1))
 
@@ -250,9 +251,9 @@ class mav_dynamics:
         self.msg_true_state.pn = self._state.item(0)
         self.msg_true_state.pe = self._state.item(1)
         self.msg_true_state.h = -self._state.item(2)
-        self.msg_true_state.Va = self._Va
-        self.msg_true_state.alpha = self._alpha
-        self.msg_true_state.beta = self._beta
+        self.msg_true_state.Va = self._Va.item()
+        self.msg_true_state.alpha = self._alpha.item()
+        self.msg_true_state.beta = self._beta.item()
         self.msg_true_state.phi = phi
         self.msg_true_state.theta = theta
         self.msg_true_state.psi = psi

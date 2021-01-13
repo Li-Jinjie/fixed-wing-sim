@@ -19,7 +19,7 @@ from Forces_and_Moments.wind_simulation import wind_simulation
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
-wind_flag = False  # True==wind, False==no wind
+wind_flag = True  # True==wind, False==no wind
 mav_view = spacecraft_viewer()  # initialize the mav viewer
 data_view = data_viewer()  # initialize view of data plots
 if VIDEO == True:

@@ -20,7 +20,7 @@ def Quaternion2Euler(quaternion):
     theta = np.arcsin(2 * (e0 * e2 - e1 * e3))
     psi = np.arctan2(2 * (e0 * e3 + e1 * e2), (e0 ** 2 + e1 ** 2 - e2 ** 2 - e3 ** 2))
 
-    return phi, theta, psi
+    return phi.item(), theta.item(), psi.item()
 
 
 def Euler2Quaternion(phi, theta, psi):
