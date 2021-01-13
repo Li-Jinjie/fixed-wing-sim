@@ -9,6 +9,7 @@ import sys
 
 sys.path.append('..')
 import numpy as np
+import msvcrt
 import parameters.simulation_parameters as SIM
 
 from Coordinate_Frames.spacecraft_viewer import spacecraft_viewer
@@ -31,6 +32,12 @@ if VIDEO == True:
 wind = wind_simulation(SIM.ts_simulation)
 mav = mav_dynamics(SIM.ts_simulation)
 
+# initialize control commands
+delta_e = -0.01  # -0.2
+delta_t = 0.8  # 0.5
+delta_a = 0.0  # 0.001
+delta_r = 0.005  # 0.005
+
 # initialize the simulation time
 sim_time = SIM.start_time
 
@@ -38,10 +45,22 @@ sim_time = SIM.start_time
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
     # -------set control surfaces-------------
-    delta_e = -0.05  # -0.2
-    delta_t = 0.5  # 0.5
-    delta_a = 0.0  # 0.001
-    delta_r = 0.005  # 0.005
+    # TODO: Use the keyboard to input the command. Need to check the document of pyqtgraph.
+    # if msvcrt.kbhit():
+    #     ch = msvcrt.getch()
+    #     if ch == 'j':
+    #         delta_a = delta_a - 0.0005  # 0.001
+    #     elif ch == 'l':
+    #         delta_a = delta_a + 0.0005
+    #     elif ch == 'a':
+    #         delta_r = delta_r - 0.005  # 0.005
+    #     elif ch == 'd':
+    #         delta_r = delta_r + 0.005
+    #     elif ch == 's':
+    #         delta_e = delta_e - 0.005
+    #     elif ch == 'w':
+    #         delta_e = delta_e + 0.005
+
     delta = np.array([[delta_a, delta_e, delta_r, delta_t]]).T  # transpose to make it a column vector
 
     # -------physical system-------------
