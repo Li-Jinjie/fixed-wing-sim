@@ -157,7 +157,6 @@ class mav_dynamics:
         u_r = self._state[3][0] - V_w[0][0]
         v_r = self._state[4][0] - V_w[1][0]
         w_r = self._state[5][0] - V_w[2][0]
-
         # compute airspeed
         self._Va = np.sqrt(u_r ** 2 + v_r ** 2 + w_r ** 2)
         # compute angle of attack
@@ -195,8 +194,8 @@ class mav_dynamics:
         # C_L = MAV.C_L_0 + MAV.C_L_alpha * self._alpha   # linear model
 
         # ---- calculate C_D, in page 63 ----
+        # PAY ATTENTION: The e here is the Oswald efficiency factor, NOT the euler number.
         C_D = MAV.C_D_p + (MAV.C_L_0 + MAV.C_L_alpha * self._alpha) ** 2 / (np.pi * MAV.e * MAV.AR)
-        # The e here is the Oswald efficiency factor, NOT the euler number.
 
         # C_D = MAV.C_D_0 + MAV.C_D_alpha * self._alpha   # linear model
 
@@ -210,8 +209,7 @@ class mav_dynamics:
         C_Z_q = - MAV.C_D_q * s_alpha - MAV.C_L_q * c_alpha
         C_Z_delta_e = - MAV.C_D_delta_e * s_alpha - MAV.C_L_delta_e * c_alpha
 
-        # The first term is gravity. Please read page 257.
-        # TODO: check
+        # The first term is gravity. Please read page 257 for more information.
         rVS_2 = MAV.rho * (self._Va ** 2) * MAV.S_wing / 2
 
         fx = MAV.mass * MAV.gravity * 2 * (e1 * e3 - e2 * e0) \
@@ -252,14 +250,20 @@ class mav_dynamics:
         self.msg_true_state.pe = self._state.item(1)
         self.msg_true_state.h = -self._state.item(2)
         self.msg_true_state.Va = self._Va.item()
-        self.msg_true_state.alpha = self._alpha.item()
-        self.msg_true_state.beta = self._beta.item()
+        self.msg_true_state.alpha = self._alpha
+        self.msg_true_state.beta = self._beta
         self.msg_true_state.phi = phi
         self.msg_true_state.theta = theta
         self.msg_true_state.psi = psi
-        # self.msg_true_state.Vg =
-        # self.msg_true_state.gamma =
-        # self.msg_true_state.chi =
+
+        # TODO: coordinate transformation using quaternion
+        # Using the equation in page 22 to calculate gamma and chi using Vg^b and Vg^i
+        R = Euler2Rotation(phi, theta, psi)  # R: body to inertial
+        [[u_i], [v_i], [w_i]] = R @ self._state[3:6]  # in the inertial frame
+        self.msg_true_state.Vg = np.sqrt(u_i ** 2 + v_i ** 2 + w_i ** 2)
+        self.msg_true_state.gamma = np.arcsin(-w_i / self.msg_true_state.Vg)  # -pi/2 to pi/2
+        self.msg_true_state.chi = np.arctan2(v_i, w_i)   # -pi to pi
+
         self.msg_true_state.p = self._state.item(10)
         self.msg_true_state.q = self._state.item(11)
         self.msg_true_state.r = self._state.item(12)
