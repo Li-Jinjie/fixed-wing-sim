@@ -129,7 +129,7 @@ gamma6 = Jxz / Jy
 gamma7 = ((Jx - Jy) * Jx + (Jxz ** 2)) / gamma
 gamma8 = Jx / gamma
 
-#   C values defines on pag 62
+#   C values defines on page 62
 C_p_0 = gamma3 * C_ell_0 + gamma4 * C_n_0
 C_p_beta = gamma3 * C_ell_beta + gamma4 * C_n_beta
 C_p_p = gamma3 * C_ell_p + gamma4 * C_n_p

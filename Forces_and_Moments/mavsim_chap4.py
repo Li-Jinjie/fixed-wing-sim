@@ -1,9 +1,9 @@
 """
 mavsimPy
-    - Chapter 3 assignment for Beard & McLain, PUP, 2012
+    - Chapter 4 assignment for Beard & McLain, PUP, 2012
     - Update history:  
-        12/18/2018 - RWB
-        1/14/2019 - RWB
+        12/27/2018 - RWB
+        1/17/2019 - RWB
 """
 import sys
 
@@ -12,21 +12,23 @@ import numpy as np
 import parameters.simulation_parameters as SIM
 
 from Coordinate_Frames.spacecraft_viewer import spacecraft_viewer
+from Coordinate_Frames.video_writer import video_writer
 from Kinematics_and_Dynamics.data_viewer import data_viewer
-from Kinematics_and_Dynamics.mav_dynamics import mav_dynamics
+from Forces_and_Moments.mav_dynamics import mav_dynamics
+from Forces_and_Moments.wind_simulation import wind_simulation
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
+wind_flag = True  # True==wind, False==no wind
 mav_view = spacecraft_viewer()  # initialize the mav viewer
 data_view = data_viewer()  # initialize view of data plots
 if VIDEO == True:
-    from Coordinate_Frames.video_writer import video_writer
-
-    video = video_writer(video_name="chap3_video.avi",
+    video = video_writer(video_name="chap4_video.avi",
                          bounding_box=(0, 0, 1000, 1000),
                          output_rate=SIM.ts_video)
 
 # initialize elements of the architecture
+wind = wind_simulation(SIM.ts_simulation)
 mav = mav_dynamics(SIM.ts_simulation)
 
 # initialize the simulation time
@@ -35,17 +37,19 @@ sim_time = SIM.start_time
 # main simulation loop
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
-    # -------vary forces and moments to check dynamics-------------
-    fx = 3  # Unit: N
-    fy = 0  # 10
-    fz = -2  # 10
-    Mx = 0.1  # 0.1   Unit: N*m
-    My = 0  # 0.1
-    Mz = 0  # 0.1
-    forces_moments = np.array([[fx, fy, fz, Mx, My, Mz]]).T
+    # -------set control surfaces-------------
+    delta_e = -0.05  # -0.2
+    delta_t = 0.5  # 0.5
+    delta_a = 0.0  # 0.001
+    delta_r = 0.005  # 0.005
+    delta = np.array([[delta_a, delta_e, delta_r, delta_t]]).T  # transpose to make it a column vector
 
     # -------physical system-------------
-    mav.update_state(forces_moments)  # propagate the MAV dynamics
+    if wind_flag is True:
+        current_wind = wind.update()  # get the new wind vector
+    else:
+        current_wind = np.zeros((6, 1))
+    mav.update_state(delta, current_wind)  # propagate the MAV dynamics
 
     # -------update viewer-------------
     mav_view.update(mav.msg_true_state)  # plot body of MAV
@@ -53,9 +57,11 @@ while sim_time < SIM.end_time:
                      mav.msg_true_state,  # estimated states
                      mav.msg_true_state,  # commanded states
                      SIM.ts_simulation)
-    if VIDEO == True: video.update(sim_time)
+    if VIDEO == True:
+        video.update(sim_time)
 
     # -------increment time-------------
     sim_time += SIM.ts_simulation
 
-if VIDEO == True: video.close()
+if VIDEO == True:
+    video.close()

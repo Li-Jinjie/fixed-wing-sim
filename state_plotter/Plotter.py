@@ -279,7 +279,7 @@ class Plotter:
                     args.name = self.multi_dim_state_delimiter.join([args.name, ''])
 
         plots = []
-        for c in np.reshape(args.curves, (-1,args.dimension)):
+        for c in np.reshape(args.curves, (-1, args.dimension)):
             plot_name = self.multi_dim_state_delimiter.join(c) # If dim > 1, join the states together
             plots.append(PlotArgs(plot_name, states=c))
         for h in args.hidden_curves:
