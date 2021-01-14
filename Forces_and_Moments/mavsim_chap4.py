@@ -18,9 +18,11 @@ from Kinematics_and_Dynamics.data_viewer import data_viewer
 from Forces_and_Moments.mav_dynamics import mav_dynamics
 from Forces_and_Moments.wind_simulation import wind_simulation
 
+# Whether or not to add wind simulation?
+wind_flag = True
+
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
-wind_flag = True  # True==wind, False==no wind
 mav_view = spacecraft_viewer()  # initialize the mav viewer
 data_view = data_viewer()  # initialize view of data plots
 if VIDEO == True:
@@ -33,10 +35,10 @@ wind = wind_simulation(SIM.ts_simulation)
 mav = mav_dynamics(SIM.ts_simulation)
 
 # initialize control commands
-delta_e = -0.01  # -0.2
-delta_t = 0.8  # 0.5
+delta_e = 0.0  # -0.2
+delta_t = 1.3  # 0.5
 delta_a = 0.0  # 0.001
-delta_r = 0.005  # 0.005
+delta_r = 0.003  # 0.005
 
 # initialize the simulation time
 sim_time = SIM.start_time

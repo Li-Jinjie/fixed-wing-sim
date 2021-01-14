@@ -11,17 +11,17 @@ sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
 
-from chap2.mav_viewer import mav_viewer
-from chap2.video_writer import video_writer
-from chap3.data_viewer import data_viewer
-from chap4.mav_dynamics import mav_dynamics
-from chap4.wind_simulation import wind_simulation
-from chap5.trim import compute_trim
-from chap5.compute_models import compute_ss_model, compute_tf_model
+from Coordinate_Frames.spacecraft_viewer import spacecraft_viewer
+from Coordinate_Frames.video_writer import video_writer
+from Kinematics_and_Dynamics.data_viewer import data_viewer
+from Forces_and_Moments.mav_dynamics import mav_dynamics
+from Forces_and_Moments.wind_simulation import wind_simulation
+from Linear_Design_Models.trim import compute_trim
+from Linear_Design_Models.compute_models import compute_ss_model, compute_tf_model
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
-mav_view = mav_viewer()  # initialize the mav viewer
+mav_view = spacecraft_viewer()  # initialize the mav viewer
 data_view = data_viewer()  # initialize view of data plots
 if VIDEO == True:
     video = video_writer(video_name="chap5_video.avi",
