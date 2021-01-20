@@ -1,15 +1,15 @@
 """
-mavsimPy
-    - Chapter 4 assignment for Beard & McLain, PUP, 2012
+mavSimPy 
+    - Chapter 5 assignment for Beard & McLain, PUP, 2012
     - Update history:  
-        12/27/2018 - RWB
-        1/17/2019 - RWB
+        1/1/2019 - RWB
+        1/29/2019 - RWB
+        2/2/2019 - RWB
 """
 import sys
 
 sys.path.append('..')
 import numpy as np
-import msvcrt
 import parameters.simulation_parameters as SIM
 
 from Coordinate_Frames.spacecraft_viewer import spacecraft_viewer
@@ -17,16 +17,15 @@ from Coordinate_Frames.video_writer import video_writer
 from Kinematics_and_Dynamics.data_viewer import data_viewer
 from Forces_and_Moments.mav_dynamics import mav_dynamics
 from Forces_and_Moments.wind_simulation import wind_simulation
-
-# Whether or not to add wind simulation?
-wind_flag = True
+from Linear_Design_Models.trim import compute_trim
+from Linear_Design_Models.compute_models import compute_ss_model, compute_tf_model
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
 mav_view = spacecraft_viewer()  # initialize the mav viewer
 data_view = data_viewer()  # initialize view of data plots
 if VIDEO == True:
-    video = video_writer(video_name="chap4_video.avi",
+    video = video_writer(video_name="chap5_video.avi",
                          bounding_box=(0, 0, 1000, 1000),
                          output_rate=SIM.ts_video)
 
@@ -34,12 +33,18 @@ if VIDEO == True:
 wind = wind_simulation(SIM.ts_simulation)
 mav = mav_dynamics(SIM.ts_simulation)
 
-# initialize control commands
-delta_a = 0.0  # 0.001
-delta_e = 0.0  # -0.2
-delta_r = 0.003  # 0.005
-delta_t = 1.3  # 0.5
+# use compute_trim function to compute trim state and trim input
+Va = 20.
+gamma = 0. * np.pi / 180.
+trim_state, trim_input = compute_trim(mav, Va, gamma)
+mav._state = trim_state  # set the initial state of the mav to the trim state
+delta = trim_input  # set input to constant constant trim input
 
+# # compute the state space model linearized about trim
+A_lon, B_lon, A_lat, B_lat = compute_ss_model(mav, trim_state, trim_input)
+# T_phi_delta_a, T_chi_phi, T_theta_delta_e, T_h_theta, \
+# T_h_Va, T_Va_delta_t, T_Va_theta, T_beta_delta_r \
+#     = compute_tf_model(mav, trim_state, trim_input)
 
 # initialize the simulation time
 sim_time = SIM.start_time
@@ -47,30 +52,10 @@ sim_time = SIM.start_time
 # main simulation loop
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
-    # -------set control surfaces-------------
-    # TODO: Use the keyboard to input the command. Need to check the document of pyqtgraph.
-    # if msvcrt.kbhit():
-    #     ch = msvcrt.getch()
-    #     if ch == 'j':
-    #         delta_a = delta_a - 0.0005  # 0.001
-    #     elif ch == 'l':
-    #         delta_a = delta_a + 0.0005
-    #     elif ch == 'a':
-    #         delta_r = delta_r - 0.005  # 0.005
-    #     elif ch == 'd':
-    #         delta_r = delta_r + 0.005
-    #     elif ch == 's':
-    #         delta_e = delta_e - 0.005
-    #     elif ch == 'w':
-    #         delta_e = delta_e + 0.005
-
-    delta = np.array([[delta_a, delta_e, delta_r, delta_t]]).T  # transpose to make it a column vector
 
     # -------physical system-------------
-    if wind_flag is True:
-        current_wind = wind.update()  # get the new wind vector
-    else:
-        current_wind = np.zeros((6, 1))
+    # current_wind = wind.update()  # get the new wind vector
+    current_wind = np.zeros((6, 1))
     mav.update_state(delta, current_wind)  # propagate the MAV dynamics
 
     # -------update viewer-------------

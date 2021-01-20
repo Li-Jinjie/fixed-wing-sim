@@ -25,7 +25,7 @@ def Quaternion2Euler(quaternion):
 
 def Euler2Quaternion(phi, theta, psi):
     '''
-    Conversion from euler angles to quaternions, page 259
+    Conversion from euler angles to quaternions, in page 259
     Args:
         Euler angles: phi, theta, psi
 

@@ -11,12 +11,6 @@
 5. 在第三章中，用四阶龙格库塔法求微分方程，真是活学活用！
 6. 画的界面特别直观，还能拖动，用pyqt画的。
 
-
-
-
-
-
-
 ### Chapter 4
 1. 风的模型，需要用计算传递函数。根据transfer_function.py里的程序，具体的实现过程如下：
 
@@ -33,4 +27,14 @@
 4. 在飞机中，u，v，w是地速Vg在机体坐标系的投影，具体在page18。这里虽然机体坐标系是一直移动的，但还是静系，因为V_g^b的定义是**相对于惯性坐标系的速度**在body坐标系下的投影。
 
 5. gamma chi的数值可以根据书p22的公式推导出来。但是需要注意，arcsin的有效值是-pi/2 to pi/2，arctan的有效值是-pi to pi
+
+6. 想改成用键盘输入，但pyqt的输入好像有点不同，得专门写一下。
+
+### Chapter 5
+
+1. 求解trim问题，其实是求解一个最优化问题，使用了scipy.optimize.minimize()函数。现在的问题在于求不到那个相等的解，而且解对初值**特别**敏感。python中是直接求解状态（17个变量），和书上的算法（3个变量）还是很不一样的。我觉得这造成了**高维的搜索空间**，导致优化算法**更难收敛**。
+2. trim函数里没有封装转弯半径R。之后如果有需要可以封装一下。
+3. 对于非线性方程，有等式约束，可以采用SLSQP方法，详见https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp。
+4. 这一章编的程序（线性化模型）对之后章节的作业没有影响。
+5. 这一章需要的C_X_0, C_X_alpha等参数书中没有给出计算公式，如果要实现需要查一下书中参考的资料。
 
