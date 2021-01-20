@@ -54,7 +54,7 @@ class mav_dynamics:
     def update_state(self, delta, wind):
         '''
             Integrate the differential equations defining dynamics, update sensors
-            delta = (delta_a, delta_e, delta_r, delta_t) are the control inputs
+            delta = np.array([[delta_a, delta_e, delta_r, delta_t]]).T are the control inputs
             wind is the wind vector in inertial coordinates
             Ts is the time step between function calls.
         '''
@@ -262,7 +262,7 @@ class mav_dynamics:
         [[u_i], [v_i], [w_i]] = R @ self._state[3:6]  # in the inertial frame
         self.msg_true_state.Vg = np.sqrt(u_i ** 2 + v_i ** 2 + w_i ** 2)
         self.msg_true_state.gamma = np.arcsin(-w_i / self.msg_true_state.Vg)  # -pi/2 to pi/2
-        self.msg_true_state.chi = np.arctan2(v_i, w_i)   # -pi to pi
+        self.msg_true_state.chi = np.arctan2(v_i, w_i)  # -pi to pi
 
         self.msg_true_state.p = self._state.item(10)
         self.msg_true_state.q = self._state.item(11)
