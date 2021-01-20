@@ -7,6 +7,7 @@ mavSimPy
         2/2/2019 - RWB
 """
 import sys
+
 sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
@@ -33,8 +34,8 @@ wind = wind_simulation(SIM.ts_simulation)
 mav = mav_dynamics(SIM.ts_simulation)
 
 # use compute_trim function to compute trim state and trim input
-Va = 25.
-gamma = 0.*np.pi/180.
+Va = 20.
+gamma = 0. * np.pi / 180.
 trim_state, trim_input = compute_trim(mav, Va, gamma)
 mav._state = trim_state  # set the initial state of the mav to the trim state
 delta = trim_input  # set input to constant constant trim input
@@ -52,26 +53,22 @@ sim_time = SIM.start_time
 print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
 
-    #-------physical system-------------
-    #current_wind = wind.update()  # get the new wind vector
-    current_wind = np.zeros((6,1))
+    # -------physical system-------------
+    # current_wind = wind.update()  # get the new wind vector
+    current_wind = np.zeros((6, 1))
     mav.update_state(delta, current_wind)  # propagate the MAV dynamics
 
-    #-------update viewer-------------
+    # -------update viewer-------------
     mav_view.update(mav.msg_true_state)  # plot body of MAV
-    data_view.update(mav.msg_true_state, # true states
-                     mav.msg_true_state, # estimated states
-                     mav.msg_true_state, # commanded states
+    data_view.update(mav.msg_true_state,  # true states
+                     mav.msg_true_state,  # estimated states
+                     mav.msg_true_state,  # commanded states
                      SIM.ts_simulation)
     if VIDEO == True:
         video.update(sim_time)
 
-    #-------increment time-------------
+    # -------increment time-------------
     sim_time += SIM.ts_simulation
 
 if VIDEO == True:
     video.close()
-
-
-
-

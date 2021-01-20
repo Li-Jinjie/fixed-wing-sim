@@ -12,11 +12,14 @@ from Forces_and_Moments.mav_dynamics import mav_dynamics
 from scipy.optimize import minimize
 from tools.tools import Euler2Quaternion
 
-
 def compute_trim(mav, Va, gamma):
     # define initial state and input
     state0 = mav._state
-    delta0 = np.zeros([4, 1])
+    delta0 = np.zeros([4, 1])  # delta_a, delta_e, delta_r, delta_t
+    # PAY ATTENTION: initial value is VERY critical to the final solution
+    delta0[1] = -0.2
+    delta0[3] = 1.8  # delta_t
+
     x0 = np.concatenate((state0, delta0), axis=0)
     # define equality constraints
     # An explanation about lambda: https://www.w3schools.com/python/python_lambda.asp
@@ -62,28 +65,29 @@ def trim_objective(x, mav, Va, gamma):
     # I set e0_dot, e1_dot, e2_dot, e3_dot = 0.
 
     # step 1: compute x_trim_dot using Va and gamma
-    x_trim_dot = np.array([[0],  # (0) pn, don't care
-                           [0],  # (1) pe, don't care
-                           [-Va * np.sin(gamma)],  # (2) pd = -h
-                           [0],  # (3) u
-                           [0],  # (4) v
-                           [0],  # (5) w
-                           [0],  # (6) e0
-                           [0],  # (7) e1
-                           [0],  # (8) e2
-                           [0],  # (9) e3
-                           [0],  # (10) p
-                           [0],  # (11) q
-                           [0]])  # (12) r
+    x_trim_dot = np.array([[0],  # (0) pn., don't care
+                           [0],  # (1) pe., don't care
+                           [-Va * np.sin(gamma)],  # (2) pd. = -h.
+                           [0],  # (3) u.
+                           [0],  # (4) v.
+                           [0],  # (5) w.
+                           [0],  # (6) e0.
+                           [0],  # (7) e1.
+                           [0],  # (8) e2.
+                           [0],  # (9) e3.
+                           [0],  # (10) p.
+                           [0],  # (11) q.
+                           [0]])  # (12) r.
 
     # step 2: compute x_dot = f(x,u) using x and {mav._forces_moments(), mav._derivatives()}
-    mav._state = np.array([x[0:13]]).T
+    state = np.array([x[0:13]]).T
     delta = np.array([x[13:17]]).T
     forces_moments = mav._forces_moments(delta)
-    x_dot = mav._derivatives(mav._state, forces_moments)
+    x_dot = mav._derivatives(state, forces_moments)
 
     # step 3: get objective function J
     # PAY ATTENTION: don't care about pn and pe
+
     J = np.sum(np.square((x_trim_dot - x_dot)[2:]))
 
     return J
