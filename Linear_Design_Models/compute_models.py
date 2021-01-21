@@ -46,7 +46,7 @@ def compute_ss_model(mav, trim_state, trim_input):
     alpha = mav._alpha
     beta = mav._beta
 
-    # TODO: check m in table 5.1 and table 5.2
+    # m: External moment applied to the airframe about the body frame y-axis.
     rVS_2 = MAV.rho * (Va ** 2) * MAV.S_wing / 2
     m = rVS_2 * MAV.c * (MAV.C_m_0 + MAV.C_m_alpha * alpha +
                          MAV.C_m_q * MAV.c / (2 * Va) * q + MAV.C_m_delta_e * delta_e)

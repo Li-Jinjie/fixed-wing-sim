@@ -32,8 +32,9 @@
 
 ### Chapter 5
 
-1. 求解trim问题，其实是求解一个最优化问题，使用了scipy.optimize.minimize()函数。现在的问题在于求不到那个相等的解，而且解对初值**特别**敏感。python中是直接求解状态（17个变量），和书上的算法（3个变量）还是很不一样的。我觉得这造成了**高维的搜索空间**，导致优化算法**更难收敛**。
-2. trim函数里没有封装转弯半径R。之后如果有需要可以封装一下。
+1. 求解trim问题，其实是求解一个最优化问题，使用了scipy.optimize.minimize()函数。现在的问题在于求不到那个相等的解，而且解对初值**特别**敏感。python中是直接求解状态（17个变量），和书上的算法（3个变量）还是很不一样的。~~我觉得这造成了**高维的搜索空间**，导致优化算法**更难收敛**~~。2021.1.21更新：我写的有问题，参考一下youtube上教学视频的结构。
+   1. 这个改了。要注意，由于我是把forces_and_moments单独拆分开的，因此用到了Va，alpha，beta这些中间变量。在trim.py中计算时，更新设定新状态后，要先使用_update_velocity_data()去得到匹配的中间变量Va等，才能继续使用 _forces_moments(delta)去得到正确的forces和moments。
+2. trim函数里没有封装转弯半径R。之后如果有需要可以封装一下。用R = np.inf表示直线。
 3. 对于非线性方程，有等式约束，可以采用SLSQP方法，详见https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp。
 4. 这一章编的程序（线性化模型）对之后章节的作业没有影响。
 5. 这一章需要的C_X_0, C_X_alpha等参数书中没有给出计算公式，如果要实现需要查一下书中参考的资料。
