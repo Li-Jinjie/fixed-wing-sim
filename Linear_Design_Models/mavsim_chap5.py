@@ -34,13 +34,13 @@ wind = wind_simulation(SIM.ts_simulation)
 mav = mav_dynamics(SIM.ts_simulation)
 
 # use compute_trim function to compute trim state and trim input
-Va = 25.
-gamma = 0. * np.pi / 180.
-Radius = 150  # straight line: np.inf
+Va = 30.
+gamma = 5. * np.pi / 180.
+Radius = -150  # straight line: np.inf
 
 trim_state, trim_input = compute_trim(mav, Va, gamma, Radius)
-print("trim states:\r\n", trim_state)
-print("trim input: a e r t \r\n", trim_input)
+# print("trim states: \r\n", trim_state)
+# print("trim input: a e r t \r\n", trim_input)
 
 mav._state = trim_state  # set the initial state of the mav to the trim state
 mav._update_velocity_data()  # update Va, alpha, beta to match the new state above.
