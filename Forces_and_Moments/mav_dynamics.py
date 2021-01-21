@@ -58,7 +58,7 @@ class mav_dynamics:
             wind is the wind vector in inertial coordinates
             Ts is the time step between function calls.
         '''
-        # get forces and moments acting on rigid bod
+        # get forces and moments acting on rigid body
         forces_moments = self._forces_moments(delta)
 
         # Integrate ODE using Runge-Kutta RK4 algorithm
