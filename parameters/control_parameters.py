@@ -1,7 +1,7 @@
 import sys
 sys.path.append('..')
 import numpy as np
-import chap5.transfer_function_coef as TF
+import Linear_Design_Models.transfer_function_coef as TF
 
 gravity =
 sigma =
