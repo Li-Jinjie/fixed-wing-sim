@@ -9,7 +9,7 @@ import sys
 sys.path.append('..')
 import numpy as np
 from scipy.optimize import minimize
-from tools.tools import Euler2Quaternion, Quaternion2Euler
+from tools.tools import Euler2Quaternion, Quaternion2Euler, Euler2Rotation
 from tools.transfer_function import transfer_function
 import parameters.aerosonde_parameters as MAV
 from parameters.simulation_parameters import ts_simulation as Ts
@@ -17,8 +17,61 @@ from parameters.simulation_parameters import ts_simulation as Ts
 
 def compute_tf_model(mav, trim_state, trim_input):
     # trim values
+    Va = mav._Va
+    u, v, w = mav._state[3:6]
+    Vg = np.sqrt(u ** 2 + v ** 2 + w ** 2)
+    # Follow the equations in page 68.
 
-    return T_phi_delta_a, T_chi_phi, T_theta_delta_e, T_h_theta, T_h_Va, T_Va_delta_t, T_Va_theta, T_beta_delta_r
+    # Lateral Transfer Functions:
+    # 1. Roll Angle
+    rV2Sb_2 = (1 / 2) * MAV.rho * (Va ** 2) * MAV.S_wing * MAV.b
+    a_phi_1 = -rV2Sb_2 * MAV.C_p_p * MAV.b / (2 * Va)
+    a_phi_2 = rV2Sb_2 * MAV.C_p_delta_a
+    T_phi_delta_a = transfer_function(np.array([[a_phi_2]]), np.array([[1, a_phi_1, 0]]), Ts)
+
+    # 2. Course and Heading
+    T_chi_phi = transfer_function(np.array([[MAV.gravity / Vg]]), np.array([[1, 0]]), Ts)
+
+    # 3. Sideslip
+    rVS_2m = (MAV.rho * Va * MAV.S_wing / (2 * MAV.mass))
+    a_beta_1 = - rVS_2m * MAV.C_Y_beta
+    a_beta_2 = rVS_2m * MAV.C_Y_delta_r
+    T_beta_delta_r = transfer_function(np.array([[a_beta_2]]), np.array([[1, a_beta_1]]), Ts)
+
+    # Longitudinal Transfer Functions:
+    # 1. Pitch Angle
+    rV2cS_2Jy = (MAV.rho * (Va ** 2) * MAV.c * MAV.S_wing / (2 * MAV.Jy))
+    a_theta_1 = - rV2cS_2Jy * MAV.C_m_q * (MAV.c / (2 * Va))
+    a_theta_2 = - rV2cS_2Jy * MAV.C_m_alpha
+    a_theta_3 = rV2cS_2Jy * MAV.C_m_delta_e
+    T_theta_delta_e = transfer_function(np.array([[a_theta_3]]), np.array([[1, a_theta_1, a_theta_2]]), Ts)
+
+    # 2. Altitude
+    T_h_theta = transfer_function(np.array([[Va]]), np.array([[1, 0]]), Ts)
+    _, theta, _ = Quaternion2Euler(mav._state[6:10])
+    T_h_Va = transfer_function(np.array([[theta]]), np.array([[1, 0]]), Ts)
+
+    # 3. Airspeed
+    # Pay Attention: Use trim condition!!!
+    u_trim, v_trim, w_trim = trim_state.item(3), trim_state.item(4), trim_state.item(5)
+    Va_trim = u_trim  # u in body frame, no wind
+    delta_e_trim = trim_input[1].item()
+    delta_t_trim = trim_input[3].item()
+    phi_trim, theta_trim, psi_trim = Quaternion2Euler(trim_state[6:10])
+    alpha_trim = np.arctan2(w_trim, u_trim)
+    R_trim = Euler2Rotation(phi_trim, theta_trim, psi_trim)  # R: body to inertial
+    [[_], [v_i_trim], [w_i_trim]] = R_trim @ trim_state[3:6]  # in the inertial frame
+    chi_trim = np.arctan2(v_i_trim, w_i_trim)  # -pi to pi
+
+    a_V_1 = (MAV.rho * Va_trim * MAV.S_wing / MAV.mass) * \
+            (MAV.C_D_0 + MAV.C_D_alpha * alpha_trim + MAV.C_D_delta_e * delta_e_trim) + \
+            (MAV.rho * MAV.S_prop / MAV.mass) * MAV.C_prop * Va_trim
+    a_V_2 = (MAV.rho * MAV.S_prop / MAV.mass) * MAV.C_prop * (MAV.k_motor ** 2) * delta_t_trim
+    a_V_3 = MAV.gravity * np.cos(theta_trim - chi_trim)
+    T_Va_delta_t = transfer_function(np.array([[a_V_2]]), np.array([[1, a_V_1]]), Ts)
+    T_Va_theta = transfer_function(np.array([[-a_V_3]]), np.array([[1, a_V_1]]), Ts)
+
+    return T_phi_delta_a, T_chi_phi, T_beta_delta_r, T_theta_delta_e, T_h_theta, T_h_Va, T_Va_delta_t, T_Va_theta
 
 
 def compute_ss_model(mav, trim_state, trim_input):
@@ -37,8 +90,9 @@ def compute_ss_model(mav, trim_state, trim_input):
     q = x_euler.item(10)
     r = x_euler.item(11)
 
-    delta_a = trim_input.item(0)
-    delta_e = trim_input.item(1)
+    # [e, a, r, t]
+    delta_e = trim_input.item(0)
+    delta_a = trim_input.item(1)
     delta_r = trim_input.item(2)
     delta_t = trim_input.item(3)
 
@@ -91,7 +145,7 @@ def compute_ss_model(mav, trim_state, trim_input):
                       [0, 0],
                       [0, 0]])
 
-    # Longitudinal Model Coefficients
+    # TODO: Longitudinal Model Coefficients. The linearize process should be calculated using  control.iosys.linearize()
     # Cannot find C_X_0, C_X_alpha .etc in the aerosonde_parameters.py and the book.
     # X_u = (u * MAV.rho * MAV.S_wing / MAV.mass) * ()
 
@@ -134,6 +188,7 @@ def quaternion_state(x_euler):
 def f_euler(mav, x_euler, input):
     # return 12x1 dynamics (as if state were Euler state)
     # compute f at euler_state
+
     return f_euler_
 
 
@@ -147,11 +202,15 @@ def df_du(mav, x_euler, delta):
     return B
 
 
-def dT_dVa(mav, Va, delta_t):
+# Read the slides of chapter 5 on: https://uavbook.byu.edu/lib/exe/fetch.php?media=lecture:chap5.pdf.
+# No need in calculating the transfer functions here.
+def dT_dVa(mav, Va_trim):
     # returns the derivative of motor thrust with respect to Va
+    dThrust = - MAV.rho * MAV.S_prop * MAV.C_prop * Va_trim
     return dThrust
 
 
-def dT_ddelta_t(mav, Va, delta_t):
+def dT_ddelta_t(mav, delta_t_trim):
     # returns the derivative of motor thrust with respect to delta_t
+    dThrust = MAV.rho * MAV.S_prop * MAV.C_prop * (MAV.k_motor ** 2) * delta_t_trim
     return dThrust

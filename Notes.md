@@ -39,6 +39,7 @@
    - 这里有问题。加了R以后，与直线相比**约束项少了5项**，~~导致无法收敛出最终结果~~。
    - 后来发现是我的x_trim_dot写错了。用euler_angle表示的x_trim_dot只需要Va, gamma, Radius就可以定义，而用quaternion表示的x_trim_dot需要p_trim, q_trim, r_trim和e_trim进行转化，前3者可以搞定，但**e_trim（trim态下的四元数）无法得到**。==**这是一个欧拉角无法被四元数替代的例子！**==
 3. 对于非线性方程，有等式约束，可以采用SLSQP方法，详见https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html#sequential-least-squares-programming-slsqp-algorithm-method-slsqp。
-4. 这一章编的程序（线性化模型）对之后章节的作业没有影响。
+4. ~~这一章编的程序（线性化模型）对之后章节的作业没有影响。~~ 光速打脸，我又得补这一章的作业了。。。
 5. 这一章需要的C_X_0, C_X_alpha等参数书中没有给出计算公式，如果要实现需要查一下书中参考的资料。
+6. **编写这一章的时候，发现transfer_function.py的编写有问题！！！和matlab版本里边的不一样。需要修改一下！**
 

@@ -54,7 +54,7 @@ class mav_dynamics:
     def update_state(self, delta, wind):
         '''
             Integrate the differential equations defining dynamics, update sensors
-            delta = np.array([[delta_a, delta_e, delta_r, delta_t]]).T are the control inputs
+            delta = np.array([[delta_e, delta_a, delta_r, delta_t]]).T are the control inputs
             wind is the wind vector in inertial coordinates
             Ts is the time step between function calls.
         '''
@@ -167,11 +167,11 @@ class mav_dynamics:
     def _forces_moments(self, delta):
         """
         return the forces on the UAV based on the state, wind, and control surfaces
-        :param delta: np.matrix(delta_a, delta_e, delta_r, delta_t)
+        :param delta: np.matrix(delta_e, delta_a, delta_r, delta_t)
         :return: Forces_and_Moments on the UAV np.matrix(Fx, Fy, Fz, Ml, Mn, Mm)
         """
-        delta_a = delta[0]
-        delta_e = delta[1]
+        delta_e = delta[0]
+        delta_a = delta[1]
         delta_r = delta[2]
         delta_t = delta[3]
 
