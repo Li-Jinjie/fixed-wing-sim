@@ -9,7 +9,7 @@ import sys
 sys.path.append('..')
 import numpy as np
 from scipy.optimize import minimize
-from tools.tools import Euler2Quaternion, Quaternion2Euler
+from tools.tools import euler_2_quaternion, quaternion_2_euler
 
 
 def compute_trim(mav, Va, gamma, Radius):
@@ -86,7 +86,7 @@ def trim_objective(x, mav, Va, gamma, Radius):
     x_quat_dot = mav._derivatives(state, forces_moments)
 
     # Step 3: # convert x_quat_dot to x_euler_dot using x, refer to (3.3) in page 31
-    phi, theta, psi = Quaternion2Euler(x[6:10])
+    phi, theta, psi = quaternion_2_euler(x[6:10])
     p, q, r = x.item(10), x.item(11), x.item(12)
 
     rot_tran = np.array([[1, np.sin(phi) * np.tan(theta), np.cos(phi) * np.tan(theta)],

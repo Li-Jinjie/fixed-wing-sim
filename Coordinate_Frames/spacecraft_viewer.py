@@ -17,7 +17,7 @@ import pyqtgraph.opengl as gl
 import pyqtgraph.Vector as Vector
 
 
-class spacecraft_viewer():
+class SpacecraftViewer():
     def __init__(self):
         # initialize Qt gui application and window
         self.app = pg.QtGui.QApplication([])  # initialize QT
@@ -52,7 +52,7 @@ class spacecraft_viewer():
         """
         spacecraft_position = np.array([[state.pn], [state.pe], [-state.h]])  # NED coordinates
         # attitude of spacecraft as a rotation matrix R from body to inertial
-        R = self._Euler2Rotation(state.phi, state.theta, state.psi)
+        R = self._euler_2_rotation(state.phi, state.theta, state.psi)
         # rotate and translate points defining spacecraft
         rotated_points = self._rotate_points(self.points, R)
         translated_points = self._translate_points(rotated_points, spacecraft_position)
@@ -167,7 +167,7 @@ class spacecraft_viewer():
                          ])
         return mesh
 
-    def _Euler2Rotation(self, phi, theta, psi):
+    def _euler_2_rotation(self, phi, theta, psi):
         """
         Converts euler angles to rotation matrix (R_b^i, i.e., body to inertial)
         """

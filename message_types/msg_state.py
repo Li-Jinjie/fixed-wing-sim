@@ -8,7 +8,7 @@ part of mavPySim
         1/9/2019 - RWB
 """
 
-class msg_state:
+class MsgState:
     def __init__(self):
         self.pn = 0.      # inertial north position in meters
         self.pe = 0.      # inertial east position in meters

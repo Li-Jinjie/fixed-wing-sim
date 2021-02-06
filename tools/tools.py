@@ -6,7 +6,7 @@
 import numpy as np
 
 
-def Quaternion2Euler(quaternion):
+def quaternion_2_euler(quaternion):
     '''
     Conversion from quaternions to euler angles, page 259
     Args:
@@ -23,7 +23,7 @@ def Quaternion2Euler(quaternion):
     return phi.item(), theta.item(), psi.item()
 
 
-def Euler2Quaternion(phi, theta, psi):
+def euler_2_quaternion(phi, theta, psi):
     '''
     Conversion from euler angles to quaternions, in page 259
     Args:
@@ -48,7 +48,7 @@ def Euler2Quaternion(phi, theta, psi):
     return e
 
 
-def Euler2Rotation(phi, theta, psi):
+def euler_2_rotation(phi, theta, psi):
     """
     Converts euler angles to rotation matrix (R_b^i, i.e., body to inertial)
     """
@@ -77,13 +77,13 @@ if __name__ == "__main__":
     phi = 120 * np.pi / 180
     theta = 10 * np.pi / 180
     psi = -11 * np.pi / 180
-    e = Euler2Quaternion(phi, theta, psi)
+    e = euler_2_quaternion(phi, theta, psi)
     print("The quaternions is ", e)
 
-    phi_new, theta_new, psi_new = Quaternion2Euler(e)
+    phi_new, theta_new, psi_new = quaternion_2_euler(e)
     print("The euler angle is ", phi_new * 180 / np.pi, theta_new * 180 / np.pi, psi_new * 180 / np.pi)
 
-    R = Euler2Rotation(phi, theta, psi)
+    R = euler_2_rotation(phi, theta, psi)
     print("The rotation matrix is ", R)
 
     # After test, there is small quantization error in the conversion.

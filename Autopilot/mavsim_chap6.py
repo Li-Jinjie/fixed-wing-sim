@@ -10,36 +10,36 @@ sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
 
-from Coordinate_Frames.spacecraft_viewer import spacecraft_viewer
-from Kinematics_and_Dynamics.data_viewer import data_viewer
-from Forces_and_Moments.mav_dynamics import mav_dynamics
-from Forces_and_Moments.wind_simulation import wind_simulation
-from Autopilot.autopilot import autopilot
-from tools.signals import signals
+from Coordinate_Frames.spacecraft_viewer import SpacecraftViewer
+from Kinematics_and_Dynamics.data_viewer import DataViewer
+from Forces_and_Moments.mav_dynamics import MavDynamics
+from Forces_and_Moments.wind_simulation import WindSimulation
+from Autopilot.autopilot import AutoPilot
+from tools.signals import Signals
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
-mav_view = spacecraft_viewer()  # initialize the mav viewer
-data_view = data_viewer()  # initialize view of data plots
+mav_view = SpacecraftViewer()  # initialize the mav viewer
+data_view = DataViewer()  # initialize view of data plots
 if VIDEO == True:
-    from Coordinate_Frames.video_writer import video_writer
+    from Coordinate_Frames.video_writer import VideoWriter
 
-    video = video_writer(video_name="chap6_video.avi",
-                         bounding_box=(0, 0, 1000, 1000),
-                         output_rate=SIM.ts_video)
+    video = VideoWriter(video_name="chap6_video.avi",
+                        bounding_box=(0, 0, 1000, 1000),
+                        output_rate=SIM.ts_video)
 
 # initialize elements of the architecture
-wind = wind_simulation(SIM.ts_simulation)
-mav = mav_dynamics(SIM.ts_simulation)
-ctrl = autopilot(SIM.ts_simulation)
+wind = WindSimulation(SIM.ts_simulation)
+mav = MavDynamics(SIM.ts_simulation)
+ctrl = AutoPilot(SIM.ts_simulation)
 
 # autopilot commands
-from message_types.msg_autopilot import msg_autopilot
+from message_types.msg_autopilot import MsgAutopilot
 
-commands = msg_autopilot()
-Va_command = signals(dc_offset=25.0, amplitude=3.0, start_time=2.0, frequency=0.01)
-h_command = signals(dc_offset=100.0, amplitude=10.0, start_time=0.0, frequency=0.02)
-chi_command = signals(dc_offset=np.radians(180), amplitude=np.radians(45), start_time=5.0, frequency=0.015)
+commands = MsgAutopilot()
+Va_command = Signals(dc_offset=25.0, amplitude=3.0, start_time=2.0, frequency=0.01)
+h_command = Signals(dc_offset=100.0, amplitude=10.0, start_time=0.0, frequency=0.02)
+chi_command = Signals(dc_offset=np.radians(180), amplitude=np.radians(45), start_time=5.0, frequency=0.015)
 
 # initialize the simulation time
 sim_time = SIM.start_time

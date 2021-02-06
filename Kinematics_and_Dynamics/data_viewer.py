@@ -1,7 +1,7 @@
 from state_plotter.Plotter import Plotter
 from state_plotter.plotter_args import *
 
-class data_viewer:
+class DataViewer:
     def __init__(self):
         time_window_length=100
         self.plotter = Plotter(plotting_frequency=100, # refresh plot every 100 time steps

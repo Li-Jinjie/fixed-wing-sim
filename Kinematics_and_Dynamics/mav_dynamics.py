@@ -19,13 +19,13 @@ sys.path.append('..')
 import numpy as np
 
 # load message types
-from message_types.msg_state import msg_state
+from message_types.msg_state import MsgState
 
 import parameters.aerosonde_parameters as MAV
-from tools.tools import Quaternion2Euler
+from tools.tools import quaternion_2_euler
 
 
-class mav_dynamics:
+class MavDynamics:
     def __init__(self, Ts):
         self.ts_simulation = Ts
         # set initial states based on parameter file
@@ -34,7 +34,7 @@ class mav_dynamics:
         # Pay attention: in this program, the column tensor is a two-dimension tensor with shape [13,1], not [13].
         self._state = np.array([[MAV.pn0, MAV.pe0, MAV.pd0, MAV.u0, MAV.v0, MAV.w0,
                                  MAV.e0, MAV.e1, MAV.e2, MAV.e3, MAV.p0, MAV.q0, MAV.r0]]).T
-        self.msg_true_state = msg_state()
+        self.msg_true_state = MsgState()
 
     ###################################
     # public functions
@@ -126,7 +126,7 @@ class mav_dynamics:
 
     def _update_msg_true_state(self):
         # update the true state message:
-        phi, theta, psi = Quaternion2Euler(self._state[6:10])
+        phi, theta, psi = quaternion_2_euler(self._state[6:10])
         self.msg_true_state.pn = self._state.item(0)
         self.msg_true_state.pe = self._state.item(1)
         self.msg_true_state.h = -self._state.item(2)

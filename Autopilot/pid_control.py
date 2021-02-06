@@ -10,7 +10,7 @@ import numpy as np
 sys.path.append('..')
 
 
-class pid_control:
+class PidControl:
     def __init__(self, kp=0.0, ki=0.0, kd=0.0, Ts=0.01, sigma=0.05, limit=1.0):
         self.kp = kp
         self.ki = ki
@@ -76,8 +76,6 @@ class pid_control:
 
         return u_sat
 
-        return u_sat
-
     def _saturate(self, u, limit):
         # saturate u at +- self.limit
         if u >= limit:
@@ -89,7 +87,7 @@ class pid_control:
         return u_sat
 
 
-class pi_control:
+class PiControl:
     def __init__(self, kp=0.0, ki=0.0, Ts=0.01, limit=1.0):
         self.kp = kp
         self.ki = ki
@@ -126,13 +124,14 @@ class pi_control:
         return u_sat
 
 
-class pd_control_with_rate:
+class PdControlWithRate:
     # PD control with rate information
     # u = kp*(yref-y) - kd*ydot
     def __init__(self, kp=0.0, kd=0.0, limit=1.0):
         self.kp = kp
         self.kd = kd
         self.limit = limit
+        self.error_delay_1 = 0
 
     def update(self, y_ref, y, ydot):
         # read the uavbook_supplement materials on https://uavbook.byu.edu/lib/exe/fetch.php?media=uavbook_supplement.pdf

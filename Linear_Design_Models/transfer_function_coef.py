@@ -8,12 +8,15 @@ LastEditors: LI Jinjie
 LastEditTime: 2021/2/6 9:53
 Description: Calculate the coefficients of transfer functions.
 '''
-from tools.tools import Euler2Quaternion, Quaternion2Euler, Euler2Rotation
+from tools.tools import euler_2_quaternion, quaternion_2_euler, euler_2_rotation
 import parameters.aerosonde_parameters as MAV
 import numpy as np
 
 
-class tf_coef:
+class TfCoef:
+    '''
+    Coefficients of transfer functions.
+    '''
     def __init__(self, Va, trim_state, trim_input):
         # Lateral Transfer Functions:
         # 1. Roll Angle
@@ -43,9 +46,9 @@ class tf_coef:
         Va_trim = u_trim  # u in body frame, no wind
         delta_e_trim = trim_input[1].item()
         delta_t_trim = trim_input[3].item()
-        phi_trim, theta_trim, psi_trim = Quaternion2Euler(trim_state[6:10])
+        phi_trim, theta_trim, psi_trim = quaternion_2_euler(trim_state[6:10])
         alpha_trim = np.arctan2(w_trim, u_trim)
-        R_trim = Euler2Rotation(phi_trim, theta_trim, psi_trim)  # R: body to inertial
+        R_trim = euler_2_rotation(phi_trim, theta_trim, psi_trim)  # R: body to inertial
         [[_], [v_i_trim], [w_i_trim]] = R_trim @ trim_state[3:6]  # in the inertial frame
         chi_trim = np.arctan2(v_i_trim, w_i_trim)  # -pi to pi
 

@@ -8,7 +8,7 @@ part of mavsim_python
         2/16/2019 - RWB
 """
 
-class msg_sensors:
+class MsgSensors:
     def __init__(self):
         self.gyro_x = 0  # gyroscope along body x axis
         self.gyro_y = 0  # gyroscope along body y axis

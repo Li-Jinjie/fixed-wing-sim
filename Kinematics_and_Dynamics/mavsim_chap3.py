@@ -11,23 +11,23 @@ sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
 
-from Coordinate_Frames.spacecraft_viewer import spacecraft_viewer
-from Kinematics_and_Dynamics.data_viewer import data_viewer
-from Kinematics_and_Dynamics.mav_dynamics import mav_dynamics
+from Coordinate_Frames.spacecraft_viewer import SpacecraftViewer
+from Kinematics_and_Dynamics.data_viewer import DataViewer
+from Kinematics_and_Dynamics.mav_dynamics import MavDynamics
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
-mav_view = spacecraft_viewer()  # initialize the mav viewer
-data_view = data_viewer()  # initialize view of data plots
+mav_view = SpacecraftViewer()  # initialize the mav viewer
+data_view = DataViewer()  # initialize view of data plots
 if VIDEO == True:
-    from Coordinate_Frames.video_writer import video_writer
+    from Coordinate_Frames.video_writer import VideoWriter
 
-    video = video_writer(video_name="chap3_video.avi",
-                         bounding_box=(0, 0, 1000, 1000),
-                         output_rate=SIM.ts_video)
+    video = VideoWriter(video_name="chap3_video.avi",
+                        bounding_box=(0, 0, 1000, 1000),
+                        output_rate=SIM.ts_video)
 
 # initialize elements of the architecture
-mav = mav_dynamics(SIM.ts_simulation)
+mav = MavDynamics(SIM.ts_simulation)
 
 # initialize the simulation time
 sim_time = SIM.start_time

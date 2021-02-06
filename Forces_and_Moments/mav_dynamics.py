@@ -10,13 +10,13 @@ sys.path.append('..')
 import numpy as np
 
 # load message types
-from message_types.msg_state import msg_state
+from message_types.msg_state import MsgState
 
 import parameters.aerosonde_parameters as MAV
 from tools.tools import *
 
 
-class mav_dynamics:
+class MavDynamics:
     def __init__(self, Ts):
         self._ts_simulation = Ts
         # set initial states based on parameter file
@@ -47,7 +47,7 @@ class mav_dynamics:
         self._alpha = 0
         self._beta = 0
         # initialize true_state message
-        self.msg_true_state = msg_state()
+        self.msg_true_state = MsgState()
 
     ###################################
     # public functions
@@ -147,8 +147,8 @@ class mav_dynamics:
         # the formula in page 57
         if wind[0][0] != 0:  # if activate the wind simulation
             # TODO: coordinate transformation using quaternion
-            phi, theta, psi = Quaternion2Euler(self._state[6:10])
-            R = Euler2Rotation(phi, theta, psi)  # R: body to inertial  R.T: inertial to body
+            phi, theta, psi = quaternion_2_euler(self._state[6:10])
+            R = euler_2_rotation(phi, theta, psi)  # R: body to inertial  R.T: inertial to body
             V_w = R.T @ wind[0:3] + wind[3:]  # in the body frame
             self._wind = R @ V_w
         else:
@@ -245,7 +245,7 @@ class mav_dynamics:
     def _update_msg_true_state(self):
         # update the class structure for the true state:
         #   [pn, pe, h, Va, alpha, beta, phi, theta, chi, p, q, r, Vg, wn, we, psi, gyro_bx, gyro_by, gyro_bz]
-        phi, theta, psi = Quaternion2Euler(self._state[6:10])
+        phi, theta, psi = quaternion_2_euler(self._state[6:10])
         self.msg_true_state.pn = self._state.item(0)
         self.msg_true_state.pe = self._state.item(1)
         self.msg_true_state.h = -self._state.item(2)
@@ -258,7 +258,7 @@ class mav_dynamics:
 
         # TODO: coordinate transformation using quaternion
         # Using the equation in page 22 to calculate gamma and chi using Vg^b and Vg^i
-        R = Euler2Rotation(phi, theta, psi)  # R: body to inertial
+        R = euler_2_rotation(phi, theta, psi)  # R: body to inertial
         [[u_i], [v_i], [w_i]] = R @ self._state[3:6]  # in the inertial frame
         self.msg_true_state.Vg = np.sqrt(u_i ** 2 + v_i ** 2 + w_i ** 2)
         self.msg_true_state.gamma = np.arcsin(-w_i / self.msg_true_state.Vg)  # -pi/2 to pi/2

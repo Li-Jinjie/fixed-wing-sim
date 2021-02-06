@@ -12,26 +12,26 @@ sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
 
-from Coordinate_Frames.spacecraft_viewer import spacecraft_viewer
-from Coordinate_Frames.video_writer import video_writer
-from Kinematics_and_Dynamics.data_viewer import data_viewer
-from Forces_and_Moments.mav_dynamics import mav_dynamics
-from Forces_and_Moments.wind_simulation import wind_simulation
+from Coordinate_Frames.spacecraft_viewer import SpacecraftViewer
+from Coordinate_Frames.video_writer import VideoWriter
+from Kinematics_and_Dynamics.data_viewer import DataViewer
+from Forces_and_Moments.mav_dynamics import MavDynamics
+from Forces_and_Moments.wind_simulation import WindSimulation
 from Linear_Design_Models.trim import compute_trim
 from Linear_Design_Models.compute_models import compute_ss_model, compute_tf_model
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
-mav_view = spacecraft_viewer()  # initialize the mav viewer
-data_view = data_viewer()  # initialize view of data plots
+mav_view = SpacecraftViewer()  # initialize the mav viewer
+data_view = DataViewer()  # initialize view of data plots
 if VIDEO == True:
-    video = video_writer(video_name="chap5_video.avi",
-                         bounding_box=(0, 0, 1000, 1000),
-                         output_rate=SIM.ts_video)
+    video = VideoWriter(video_name="chap5_video.avi",
+                        bounding_box=(0, 0, 1000, 1000),
+                        output_rate=SIM.ts_video)
 
 # initialize elements of the architecture
-wind = wind_simulation(SIM.ts_simulation)
-mav = mav_dynamics(SIM.ts_simulation)
+wind = WindSimulation(SIM.ts_simulation)
+mav = MavDynamics(SIM.ts_simulation)
 
 # use compute_trim function to compute trim state and trim input
 Va = 30.
