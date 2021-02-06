@@ -90,8 +90,9 @@ def compute_ss_model(mav, trim_state, trim_input):
     q = x_euler.item(10)
     r = x_euler.item(11)
 
-    delta_a = trim_input.item(0)
-    delta_e = trim_input.item(1)
+    # [e, a, r, t]
+    delta_e = trim_input.item(0)
+    delta_a = trim_input.item(1)
     delta_r = trim_input.item(2)
     delta_t = trim_input.item(3)
 
@@ -144,7 +145,7 @@ def compute_ss_model(mav, trim_state, trim_input):
                       [0, 0],
                       [0, 0]])
 
-    # TODO: Longitudinal Model Coefficients
+    # TODO: Longitudinal Model Coefficients. The linearize process should be calculated using  control.iosys.linearize()
     # Cannot find C_X_0, C_X_alpha .etc in the aerosonde_parameters.py and the book.
     # X_u = (u * MAV.rho * MAV.S_wing / MAV.mass) * ()
 
@@ -187,6 +188,7 @@ def quaternion_state(x_euler):
 def f_euler(mav, x_euler, input):
     # return 12x1 dynamics (as if state were Euler state)
     # compute f at euler_state
+
     return f_euler_
 
 
@@ -200,11 +202,15 @@ def df_du(mav, x_euler, delta):
     return B
 
 
-def dT_dVa(mav, Va, delta_t):
+# Read the slides of chapter 5 on: https://uavbook.byu.edu/lib/exe/fetch.php?media=lecture:chap5.pdf.
+# No need in calculating the transfer functions here.
+def dT_dVa(mav, Va_trim):
     # returns the derivative of motor thrust with respect to Va
+    dThrust = - MAV.rho * MAV.S_prop * MAV.C_prop * Va_trim
     return dThrust
 
 
-def dT_ddelta_t(mav, Va, delta_t):
+def dT_ddelta_t(mav, delta_t_trim):
     # returns the derivative of motor thrust with respect to delta_t
+    dThrust = MAV.rho * MAV.S_prop * MAV.C_prop * (MAV.k_motor ** 2) * delta_t_trim
     return dThrust

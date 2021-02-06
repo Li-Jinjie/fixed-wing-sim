@@ -1,6 +1,7 @@
 import sys
 sys.path.append('..')
 import numpy as np
+import parameters.aerosonde_parameters as MAV
 import Linear_Design_Models.transfer_function_coef as TF
 
 gravity =

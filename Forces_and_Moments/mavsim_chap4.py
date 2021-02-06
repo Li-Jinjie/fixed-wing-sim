@@ -40,7 +40,6 @@ delta_e = 0.0  # -0.2
 delta_r = 0.003  # 0.005
 delta_t = 1.3  # 0.5
 
-
 # initialize the simulation time
 sim_time = SIM.start_time
 
@@ -64,7 +63,7 @@ while sim_time < SIM.end_time:
     #     elif ch == 'w':
     #         delta_e = delta_e + 0.005
 
-    delta = np.array([[delta_a, delta_e, delta_r, delta_t]]).T  # transpose to make it a column vector
+    delta = np.array([[delta_e, delta_a, delta_r, delta_t]]).T  # [e, a, r, t] transpose to make it a column vector
 
     # -------physical system-------------
     if wind_flag is True:

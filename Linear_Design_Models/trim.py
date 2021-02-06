@@ -15,7 +15,7 @@ from tools.tools import Euler2Quaternion, Quaternion2Euler
 def compute_trim(mav, Va, gamma, Radius):
     # define initial state and input
     state0 = mav._state
-    delta0 = np.zeros([4, 1])  # delta_a, delta_e, delta_r, delta_t
+    delta0 = np.zeros([4, 1])  # delta_e, delta_a, delta_r, delta_t
     # PAY ATTENTION: The initial value is VERY CRITICAL to the final solution. [0,0,0,1] in p278.
     delta0[3] = 1  # delta_t
 
