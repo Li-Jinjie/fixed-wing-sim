@@ -43,3 +43,7 @@
 5. 这一章需要的C_X_0, C_X_alpha等参数书中没有给出计算公式，如果要实现需要查一下书中参考的资料。
 6. **编写这一章的时候，发现transfer_function.py的编写有问题！！！和matlab版本里边的不一样。需要修改一下！**
 
+### Chapter 6
+
+1. delta的顺序改为e，a，r，t
+2. autopilot的顺序：首先通过

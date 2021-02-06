@@ -6,7 +6,9 @@ pid_control
 """
 import sys
 import numpy as np
+
 sys.path.append('..')
+
 
 class pid_control:
     def __init__(self, kp=0.0, ki=0.0, kd=0.0, Ts=0.01, sigma=0.05, limit=1.0):
@@ -16,27 +18,76 @@ class pid_control:
         self.Ts = Ts
         self.limit = limit
         self.integrator = 0.0
-        self.error_delay_1 = 0.0
-        self.error_dot_delay_1 = 0.0
+        self.error_dot = 0.0
+        self.y_dot = 0
+        self.error_delay_1 = 0.0  # delayed by one time step
+        # self.error_dot_delay_1 = 0.0
         # gains for differentiator
         self.a1 = (2.0 * sigma - Ts) / (2.0 * sigma + Ts)
         self.a2 = 2.0 / (2.0 * sigma + Ts)
 
     def update(self, y_ref, y, reset_flag=False):
+        if reset_flag is True:
+            self.integrator = 0
+            self.error_dot = 0
+            self.error_delay_1 = 0
+
+        # compute the current error
+        error = y_ref - y
+        #  update the integrator using trapezoidal rule
+        self.integrator = self.integrator + (self.Ts / 2) * (error + self.error_delay_1)
+        #  update the differentiator using trapezoidal rule
+        self.error_dot = self.a1 * self.error_dot + self.a2 * (error - self.error_delay_1)
+        # update the delayed variable
+        self.error_delay_1 = error
+        # PID control
+        u_unsat = self.kp * error + self.ki * self.integrator + self.kd * self.error_dot
+        # saturate PID control at limit
+        u_sat = self._saturate(u_unsat, self.limit)
+
+        # implement integrator anti-windup
+        if np.abs(self.ki) > 0.0001:  # not work if ki is too small
+            self.integrator = self.integrator + 1.0 / self.ki * (u_sat - u_unsat)
+
         return u_sat
 
     def update_with_rate(self, y_ref, y, ydot, reset_flag=False):
+        # read the uavbook_supplement materials on https://uavbook.byu.edu/lib/exe/fetch.php?media=uavbook_supplement.pdf
+        if reset_flag is True:
+            self.integrator = 0
+            self.y_dot = 0
+            self.error_delay_1 = 0
+
+        # compute the current error
+        error = y_ref - y
+        # update the integrator using trapezoidal rule
+        self.integrator = self.integrator + (self.Ts / 2) * (error + self.error_delay_1)
+        # update the delayed variable
+        self.error_delay_1 = error
+
+        # PID control
+        u_unsat = self.kp * error + self.ki * self.integrator - self.kd * self.y_dot
+        # saturate PID control at limit
+        u_sat = self._saturate(u_unsat, self.limit)
+
+        # implement integrator anti-windup
+        if np.abs(self.ki) > 0.0001:  # not work if ki is too small
+            self.integrator = self.integrator + 1.0 / self.ki * (u_sat - u_unsat)
+
         return u_sat
 
-    def _saturate(self, u):
+        return u_sat
+
+    def _saturate(self, u, limit):
         # saturate u at +- self.limit
-        if u >= self.limit:
-            u_sat = self.limit
-        elif u <= -self.limit:
-            u_sat = -self.limit
+        if u >= limit:
+            u_sat = limit
+        elif u <= -limit:
+            u_sat = -limit
         else:
             u_sat = u
         return u_sat
+
 
 class pi_control:
     def __init__(self, kp=0.0, ki=0.0, Ts=0.01, limit=1.0):
@@ -48,17 +99,32 @@ class pi_control:
         self.error_delay_1 = 0.0
 
     def update(self, y_ref, y):
+
+        # compute the current error
+        error = y_ref - y
+        #  update the integrator using trapezoidal rule
+        self.integrator = self.integrator + (self.Ts / 2) * (error + self.error_delay_1)
+        # update the delayed variable
+        self.error_delay_1 = error
+        # PI control
+        u_unsat = self.kp * error + self.ki * self.integrator
+        # saturate PID control at limit
+        u_sat = self._saturate(u_unsat, self.limit)
+        # implement integrator anti-windup
+        if np.abs(self.ki) > 0.0001:
+            self.integrator = self.integrator + 1.0 / self.ki * (u_sat - u_unsat)
         return u_sat
 
-    def _saturate(self, u):
+    def _saturate(self, u, limit):
         # saturate u at +- self.limit
-        if u >= self.limit:
-            u_sat = self.limit
-        elif u <= -self.limit:
-            u_sat = -self.limit
+        if u >= limit:
+            u_sat = limit
+        elif u <= -limit:
+            u_sat = -limit
         else:
             u_sat = u
         return u_sat
+
 
 class pd_control_with_rate:
     # PD control with rate information
@@ -69,14 +135,25 @@ class pd_control_with_rate:
         self.limit = limit
 
     def update(self, y_ref, y, ydot):
+        # read the uavbook_supplement materials on https://uavbook.byu.edu/lib/exe/fetch.php?media=uavbook_supplement.pdf
+
+        # compute the current error
+        error = y_ref - y
+        # update the delayed variable
+        self.error_delay_1 = error
+
+        # PID control
+        u_unsat = self.kp * error - self.kd * self.y_dot
+        # saturate PID control at limit
+        u_sat = self._saturate(u_unsat, self.limit)
         return u_sat
 
-    def _saturate(self, u):
+    def _saturate(self, u, limit):
         # saturate u at +- self.limit
-        if u >= self.limit:
-            u_sat = self.limit
-        elif u <= -self.limit:
-            u_sat = -self.limit
+        if u >= limit:
+            u_sat = limit
+        elif u <= -limit:
+            u_sat = -limit
         else:
             u_sat = u
         return u_sat
