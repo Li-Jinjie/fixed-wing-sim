@@ -51,11 +51,10 @@ class PidControl:
 
         return u_sat
 
-    def update_with_rate(self, y_ref, y, ydot, reset_flag=False):
+    def update_with_rate(self, y_ref, y, y_dot, reset_flag=False):
         # read the uavbook_supplement materials on https://uavbook.byu.edu/lib/exe/fetch.php?media=uavbook_supplement.pdf
         if reset_flag is True:
             self.integrator = 0
-            self.y_dot = 0
             self.error_delay_1 = 0
 
         # compute the current error
@@ -66,7 +65,7 @@ class PidControl:
         self.error_delay_1 = error
 
         # PID control
-        u_unsat = self.kp * error + self.ki * self.integrator - self.kd * self.y_dot
+        u_unsat = self.kp * error + self.ki * self.integrator - self.kd * y_dot
         # saturate PID control at limit
         u_sat = self._saturate(u_unsat, self.limit)
 
@@ -133,7 +132,7 @@ class PdControlWithRate:
         self.limit = limit
         self.error_delay_1 = 0
 
-    def update(self, y_ref, y, ydot):
+    def update(self, y_ref, y, y_dot):
         # read the uavbook_supplement materials on https://uavbook.byu.edu/lib/exe/fetch.php?media=uavbook_supplement.pdf
 
         # compute the current error
@@ -142,7 +141,7 @@ class PdControlWithRate:
         self.error_delay_1 = error
 
         # PID control
-        u_unsat = self.kp * error - self.kd * self.y_dot
+        u_unsat = self.kp * error - self.kd * y_dot
         # saturate PID control at limit
         u_sat = self._saturate(u_unsat, self.limit)
         return u_sat
