@@ -34,9 +34,9 @@ wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
 
 # use compute_trim function to compute trim state and trim input
-Va = 30.
-gamma = 5. * np.pi / 180.
-Radius = -150  # straight line: np.inf
+Va = 35.
+gamma = 0. * np.pi / 180.
+Radius = np.inf  # straight line: np.inf
 
 trim_state, trim_input = compute_trim(mav, Va, gamma, Radius)
 # print("trim states: \r\n", trim_state)

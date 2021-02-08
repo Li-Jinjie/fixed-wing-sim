@@ -17,11 +17,14 @@ from Forces_and_Moments.wind_simulation import WindSimulation
 from Autopilot.autopilot import AutoPilot
 from tools.signals import Signals
 
+# autopilot commands
+from message_types.msg_autopilot import MsgAutopilot
+
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
 mav_view = SpacecraftViewer()  # initialize the mav viewer
 data_view = DataViewer()  # initialize view of data plots
-if VIDEO == True:
+if VIDEO is True:
     from Coordinate_Frames.video_writer import VideoWriter
 
     video = VideoWriter(video_name="chap6_video.avi",
@@ -32,9 +35,6 @@ if VIDEO == True:
 wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
 ctrl = AutoPilot(SIM.ts_simulation)
-
-# autopilot commands
-from message_types.msg_autopilot import MsgAutopilot
 
 commands = MsgAutopilot()
 Va_command = Signals(dc_offset=25.0, amplitude=3.0, start_time=2.0, frequency=0.01)
@@ -49,7 +49,7 @@ print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
 
     # -------controller-------------
-    estimated_state = mav.true_state  # uses true states in the control
+    estimated_state = mav.msg_true_state  # uses true states in the control algorithm
     commands.airspeed_command = Va_command.square(sim_time)
     commands.course_command = chi_command.square(sim_time)
     commands.altitude_command = h_command.square(sim_time)
@@ -60,10 +60,11 @@ while sim_time < SIM.end_time:
     mav.update_state(delta, current_wind)  # propagate the MAV dynamics
 
     # -------update viewer-------------
-    mav_view.update(mav.true_state)  # plot body of MAV
-    data_view.update(mav.true_state,  # true states
-                     mav.true_state,  # estimated states
+    mav_view.update(mav.msg_true_state)  # plot body of MAV
+    data_view.update(mav.msg_true_state,  # true states
+                     mav.msg_true_state,  # estimated states
                      commanded_state,  # commanded states
+                     delta,
                      SIM.ts_simulation)
     if VIDEO == True: video.update(sim_time)
 

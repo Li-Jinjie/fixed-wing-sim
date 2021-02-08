@@ -11,7 +11,7 @@ from tools.tools import euler_2_quaternion
 pn0 = 0.  # initial north position
 pe0 = 0.  # initial east position
 pd0 = -20.0  # initial down position
-u0 = 25.  # initial velocity along body x-axis
+u0 = 35.  # initial velocity along body x-axis
 v0 = 0.  # initial velocity along body y-axis
 w0 = 0.  # initial velocity along body z-axis
 phi0 = 0.  # initial roll angle
@@ -31,7 +31,7 @@ e3 = e.item(3)
 ######################################################################################
 #   Physical Parameters
 ######################################################################################
-mass = 13.5  # kg
+mass = 25.0  # kg  change from 13.5kg to 25kg according to the Comments on https://uavbook.byu.edu/doku.php
 Jx = 0.8244  # kg m^2
 Jy = 1.135  # kg m^2
 Jz = 1.759  # kg m^2

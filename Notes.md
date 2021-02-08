@@ -46,4 +46,9 @@
 ### Chapter 6
 
 1. delta的顺序改为e，a，r，t
-2. autopilot的顺序：首先通过
+2. 类的命名用驼峰命名法
+3. 关于为何在pid控制的说明：
+   1. 首先在程序里error的定义是y_ref-y，这样实际上就已经是负反馈了，y过大了是负的，所以在控制类里不用加负号。
+   2. 其次，程序里出现了一种PdControlWithRate。这里说白了就是用真实的y的导数替代我们用Z变换得到的error_dot量。由于y_ref的导数为0，所以error = y_ref - y的导数就变为了 - y_dot
+4. Yaw Damper using the Rudder 是补充材料里的新内容。对于小型飞机，如果侧滑角无法测量，则书中p105的公式需要替换成补充材料中的内容，用Yaw Damper的方式控制侧滑角为0。
+5. autopilot的顺序：首先通过

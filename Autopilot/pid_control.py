@@ -65,7 +65,7 @@ class PidControl:
         self.error_delay_1 = error
 
         # PID control
-        u_unsat = self.kp * error + self.ki * self.integrator - self.kd * y_dot
+        u_unsat = self.kp * error + self.ki * self.integrator - self.kd * y_dot   # error_dot = 0 - y_dot
         # saturate PID control at limit
         u_sat = self._saturate(u_unsat, self.limit)
 

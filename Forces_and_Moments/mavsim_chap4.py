@@ -36,9 +36,9 @@ mav = MavDynamics(SIM.ts_simulation)
 
 # initialize control commands
 delta_a = 0.0  # 0.001
-delta_e = 0.0  # -0.2
+delta_e = -0.05  # -0.2
 delta_r = 0.003  # 0.005
-delta_t = 1.3  # 0.5
+delta_t = 1.0  # 0.5
 
 # initialize the simulation time
 sim_time = SIM.start_time
