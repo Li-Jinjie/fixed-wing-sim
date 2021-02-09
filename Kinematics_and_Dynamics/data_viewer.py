@@ -1,10 +1,21 @@
+"""
+data_viewer
+
+part of mavsimPy
+    - Beard & McLain, PUP, 2012
+    - Update history:
+        12/17/2018 - RWB
+        1/14/2019 - RWB
+        2/27/2020 - RWB
+"""
 from state_plotter.Plotter import Plotter
 from state_plotter.plotter_args import *
 
+
 class DataViewer:
     def __init__(self):
-        time_window_length=100
-        self.plotter = Plotter(plotting_frequency=100, # refresh plot every 100 time steps
+        time_window_length = 100
+        self.plotter = Plotter(plotting_frequency=100,  # refresh plot every 100 time steps
                                time_window=time_window_length)  # plot last time_window seconds of data
         # set up the plot window
         # define first row
@@ -114,37 +125,33 @@ class DataViewer:
         self.time = 0.
 
     def update(self, true_state, estimated_state, commanded_state, delta, ts):
-        commands = [commanded_state.h, # h_c
-                    commanded_state.Va, # Va_c
-                    commanded_state.phi, # phi_c
-                    commanded_state.theta, # theta_c
-                    commanded_state.chi] # chi_c
+        commands = [commanded_state.altitude,  # h_c
+                    commanded_state.Va,  # Va_c
+                    commanded_state.phi,  # phi_c
+                    commanded_state.theta,  # theta_c
+                    commanded_state.chi]  # chi_c
         ## Add the state data in vectors
         # the order has to match the order in lines 72-76
-        true_state_list = [true_state.pn, true_state.pe, true_state.h,
+        true_state_list = [true_state.north, true_state.east, true_state.altitude,
                            true_state.Va, true_state.alpha, true_state.beta,
                            true_state.phi, true_state.theta, true_state.chi,
                            true_state.p, true_state.q, true_state.r,
                            true_state.Vg, true_state.wn, true_state.we, true_state.psi,
                            true_state.bx, true_state.by, true_state.bz]
-        estimated_state_list = [estimated_state.pn, estimated_state.pe, estimated_state.h,
+        estimated_state_list = [estimated_state.north, estimated_state.east, estimated_state.altitude,
                                 estimated_state.Va, estimated_state.alpha, estimated_state.beta,
                                 estimated_state.phi, estimated_state.theta, estimated_state.chi,
                                 estimated_state.p, estimated_state.q, estimated_state.r,
                                 estimated_state.Vg, estimated_state.wn, estimated_state.we, estimated_state.psi,
                                 estimated_state.bx, estimated_state.by, estimated_state.bz]
-        delta_list = [delta.item(0), delta.item(1), delta.item(2), delta.item(3)]
+        delta_list = [delta.elevator, delta.aileron, delta.rudder, delta.throttle]
         self.plotter.add_vector_measurement('true_state', true_state_list, self.time)
         self.plotter.add_vector_measurement('estimated_state', estimated_state_list, self.time)
         self.plotter.add_vector_measurement('commands', commands, self.time)
         self.plotter.add_vector_measurement('delta', delta_list, self.time)
-
 
         # Update and display the plot
         self.plotter.update_plots()
 
         # increment time
         self.time += ts
-
-
-
