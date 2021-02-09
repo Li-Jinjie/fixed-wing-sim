@@ -8,11 +8,12 @@ part of mavPySim
         1/9/2019 - RWB
 """
 
+
 class MsgState:
     def __init__(self):
-        self.pn = 0.      # inertial north position in meters
-        self.pe = 0.      # inertial east position in meters
-        self.h = 0.       # inertial altitude in meters
+        self.north = 0.      # inertial north position in meters
+        self.east = 0.      # inertial east position in meters
+        self.altitude = 0.       # inertial altitude in meters
         self.phi = 0.     # roll angle in radians
         self.theta = 0.   # pitch angle in radians
         self.psi = 0.     # yaw angle in radians

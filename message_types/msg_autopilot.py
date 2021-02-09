@@ -8,6 +8,7 @@ part of mavsim_python
         2/5/2019 - RWB
 """
 
+
 class MsgAutopilot:
     def __init__(self):
         self.airspeed_command = 0.0  # commanded airspeed m/s
