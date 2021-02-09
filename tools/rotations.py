@@ -4,40 +4,54 @@ various tools to be used in mavPySim
 import numpy as np
 import scipy.linalg as linalg
 
-def Quaternion2Euler(quaternion):
-    """
-    converts a quaternion attitude to an euler angle attitude
-    :param quaternion: the quaternion to be converted to euler angles in a np.matrix
-    :return: the euler angle equivalent (phi, theta, psi) in a np.array
-    """
-    e0 = quaternion.item(0)
-    e1 = quaternion.item(1)
-    e2 = quaternion.item(2)
-    e3 = quaternion.item(3)
-    phi = np.arctan2(2.0 * (e0 * e1 + e2 * e3), e0**2.0 + e3**2.0 - e1**2.0 - e2**2.0)
-    theta = np.arcsin(2.0 * (e0 * e2 - e1 * e3))
-    psi = np.arctan2(2.0 * (e0 * e3 + e1 * e2), e0**2.0 + e1**2.0 - e2**2.0 - e3**2.0)
 
-    return phi, theta, psi
+def quaternion_2_euler(quaternion):
+    '''
+    Conversion from quaternions to euler angles, page 259
+    Args:
+        quaternion: ndarray, four numbers of quaternions: e0, e1, e2, e3
 
-def Euler2Quaternion(phi, theta, psi):
-    """
-    Converts an euler angle attitude to a quaternian attitude
-    :param euler: Euler angle attitude in a np.matrix(phi, theta, psi)
-    :return: Quaternian attitude in np.array(e0, e1, e2, e3)
-    """
+    Returns:
+        euler angles: phi, theta, psi
+    '''
+    e0, e1, e2, e3 = quaternion[0], quaternion[1], quaternion[2], quaternion[3]
+    phi = np.arctan2(2. * (e0 * e1 + e2 * e3), (e0 ** 2. + e3 ** 2. - e1 ** 2. - e2 ** 2.))
+    theta = np.arcsin(2. * (e0 * e2 - e1 * e3))
+    psi = np.arctan2(2. * (e0 * e3 + e1 * e2), (e0 ** 2. + e1 ** 2. - e2 ** 2. - e3 ** 2.))
 
-    e0 = np.cos(psi/2.0) * np.cos(theta/2.0) * np.cos(phi/2.0) + np.sin(psi/2.0) * np.sin(theta/2.0) * np.sin(phi/2.0)
-    e1 = np.cos(psi/2.0) * np.cos(theta/2.0) * np.sin(phi/2.0) - np.sin(psi/2.0) * np.sin(theta/2.0) * np.cos(phi/2.0)
-    e2 = np.cos(psi/2.0) * np.sin(theta/2.0) * np.cos(phi/2.0) + np.sin(psi/2.0) * np.cos(theta/2.0) * np.sin(phi/2.0)
-    e3 = np.sin(psi/2.0) * np.cos(theta/2.0) * np.cos(phi/2.0) - np.cos(psi/2.0) * np.sin(theta/2.0) * np.sin(phi/2.0)
+    return phi.item(), theta.item(), psi.item()
 
-    return np.array([[e0],[e1],[e2],[e3]])
 
-def Euler2Rotation(phi, theta, psi):
+def euler_2_quaternion(phi, theta, psi):
+    '''
+    Conversion from euler angles to quaternions, in page 259
+    Args:
+        Euler angles: phi, theta, psi
+
+    Returns:
+        quaternions e
+    '''
+    s_phi_2 = np.sin(phi / 2)
+    c_phi_2 = np.cos(phi / 2)
+    s_theta_2 = np.sin(theta / 2)
+    c_theta_2 = np.cos(theta / 2)
+    s_psi_2 = np.sin(psi / 2)
+    c_psi_2 = np.cos(psi / 2)
+
+    e = np.zeros(4)
+    e[0] = c_psi_2 * c_theta_2 * c_phi_2 + s_psi_2 * s_theta_2 * s_phi_2
+    e[1] = c_psi_2 * c_theta_2 * s_phi_2 - s_psi_2 * s_theta_2 * c_phi_2
+    e[2] = c_psi_2 * s_theta_2 * c_phi_2 + s_psi_2 * c_theta_2 * s_phi_2
+    e[3] = s_psi_2 * c_theta_2 * c_phi_2 - c_psi_2 * s_theta_2 * s_phi_2
+
+    return e
+
+
+def euler_2_rotation(phi, theta, psi):
     """
-    Converts euler angles to rotation matrix (R_b^i)
+    Converts euler angles to rotation matrix (R_b^i, i.e., body to inertial)
     """
+    # only call sin and cos once for each angle to speed up rendering
     c_phi = np.cos(phi)
     s_phi = np.sin(phi)
     c_theta = np.cos(theta)
@@ -46,25 +60,19 @@ def Euler2Rotation(phi, theta, psi):
     s_psi = np.sin(psi)
 
     R_roll = np.array([[1, 0, 0],
-                       [0, c_phi, -s_phi],
-                       [0, s_phi, c_phi]])
-    R_pitch = np.array([[c_theta, 0, s_theta],
+                       [0, c_phi, s_phi],
+                       [0, -s_phi, c_phi]], dtype=object)
+    R_pitch = np.array([[c_theta, 0, -s_theta],
                         [0, 1, 0],
-                        [-s_theta, 0, c_theta]])
-    R_yaw = np.array([[c_psi, -s_psi, 0],
-                      [s_psi, c_psi, 0],
-                      [0, 0, 1]])
-    #R = np.dot(R_yaw, np.dot(R_pitch, R_roll))
-    R = R_yaw @ R_pitch @ R_roll
+                        [s_theta, 0, c_theta]], dtype=object)
+    R_yaw = np.array([[c_psi, s_psi, 0],
+                      [-s_psi, c_psi, 0],
+                      [0, 0, 1]], dtype=object)
+    R = R_roll @ R_pitch @ R_yaw  # inertial to body (Equation 2.4 in book)
+    return R.T  # transpose to return body to inertial
 
-    # rotation is body to inertial frame
-    # R = np.array([[c_theta*c_psi, s_phi*s_theta*c_psi-c_phi*s_psi, c_phi*s_theta*c_psi+s_phi*s_psi],
-    #               [c_theta*s_psi, s_phi*s_theta*s_psi+c_phi*c_psi, c_phi*s_theta*s_psi-s_phi*c_psi],
-    #               [-s_theta, s_phi*c_theta, c_phi*c_theta]])
 
-    return R
-
-def Quaternion2Rotation(quaternion):
+def quaternion_2_rotation(quaternion):
     """
     converts a quaternion attitude to a rotation matrix
     """
@@ -75,12 +83,14 @@ def Quaternion2Rotation(quaternion):
 
     R = np.array([[e1 ** 2.0 + e0 ** 2.0 - e2 ** 2.0 - e3 ** 2.0, 2.0 * (e1 * e2 - e3 * e0), 2.0 * (e1 * e3 + e2 * e0)],
                   [2.0 * (e1 * e2 + e3 * e0), e2 ** 2.0 + e0 ** 2.0 - e1 ** 2.0 - e3 ** 2.0, 2.0 * (e2 * e3 - e1 * e0)],
-                  [2.0 * (e1 * e3 - e2 * e0), 2.0 * (e2 * e3 + e1 * e0), e3 ** 2.0 + e0 ** 2.0 - e1 ** 2.0 - e2 ** 2.0]])
-    R = R/linalg.det(R)
+                  [2.0 * (e1 * e3 - e2 * e0), 2.0 * (e2 * e3 + e1 * e0),
+                   e3 ** 2.0 + e0 ** 2.0 - e1 ** 2.0 - e2 ** 2.0]])
+    R = R / linalg.det(R)
 
     return R
 
-def Rotation2Quaternion(R):
+
+def rotation_2_quaternion(R):
     """
     converts a rotation matrix to a unit quaternion
     """
@@ -94,31 +104,32 @@ def Rotation2Quaternion(R):
     r32 = R[2][1]
     r33 = R[2][2]
 
-    tmp=r11+r22+r33
-    if tmp>0:
-        e0 = 0.5*np.sqrt(1+tmp)
+    tmp = r11 + r22 + r33
+    if tmp > 0:
+        e0 = 0.5 * np.sqrt(1 + tmp)
     else:
-        e0 = 0.5*np.sqrt(((r12-r21)**2+(r13-r31)**2+(r23-r32)**2)/(3-tmp))
+        e0 = 0.5 * np.sqrt(((r12 - r21) ** 2 + (r13 - r31) ** 2 + (r23 - r32) ** 2) / (3 - tmp))
 
-    tmp=r11-r22-r33
-    if tmp>0:
-        e1 = 0.5*np.sqrt(1+tmp)
+    tmp = r11 - r22 - r33
+    if tmp > 0:
+        e1 = 0.5 * np.sqrt(1 + tmp)
     else:
-        e1 = 0.5*np.sqrt(((r12+r21)**2+(r13+r31)**2+(r23-r32)**2)/(3-tmp))
+        e1 = 0.5 * np.sqrt(((r12 + r21) ** 2 + (r13 + r31) ** 2 + (r23 - r32) ** 2) / (3 - tmp))
 
-    tmp=-r11+r22-r33
-    if tmp>0:
-        e2 = 0.5*np.sqrt(1+tmp)
+    tmp = -r11 + r22 - r33
+    if tmp > 0:
+        e2 = 0.5 * np.sqrt(1 + tmp)
     else:
-        e2 = 0.5*np.sqrt(((r12+r21)**2+(r13+r31)**2+(r23+r32)**2)/(3-tmp))
+        e2 = 0.5 * np.sqrt(((r12 + r21) ** 2 + (r13 + r31) ** 2 + (r23 + r32) ** 2) / (3 - tmp))
 
-    tmp=-r11+-22+r33
-    if tmp>0:
-        e3 = 0.5*np.sqrt(1+tmp)
+    tmp = -r11 + -22 + r33
+    if tmp > 0:
+        e3 = 0.5 * np.sqrt(1 + tmp)
     else:
-        e3 = 0.5*np.sqrt(((r12-r21)**2+(r13+r31)**2+(r23+r32)**2)/(3-tmp))
+        e3 = 0.5 * np.sqrt(((r12 - r21) ** 2 + (r13 + r31) ** 2 + (r23 + r32) ** 2) / (3 - tmp))
 
     return np.array([[e0], [e1], [e2], [e3]])
+
 
 def hat(omega):
     """
@@ -132,4 +143,3 @@ def hat(omega):
                           [c, 0, -a],
                           [-b, a, 0]])
     return omega_hat
-
