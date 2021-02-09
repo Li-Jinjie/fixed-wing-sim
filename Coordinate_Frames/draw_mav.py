@@ -6,7 +6,7 @@ mavsim_python: drawing tools
 """
 import numpy as np
 import pyqtgraph.opengl as gl
-from tools.rotations import Euler2Rotation
+from tools.rotations import euler_2_rotation
 
 
 class DrawMav:
@@ -28,7 +28,7 @@ class DrawMav:
 
         mav_position = np.array([[state.north], [state.east], [-state.altitude]])  # NED coordinates
         # attitude of mav as a rotation matrix R from body to inertial
-        R = Euler2Rotation(state.phi, state.theta, state.psi)
+        R = euler_2_rotation(state.phi, state.theta, state.psi)
         # rotate and translate points defining mav
         rotated_points = self.rotate_points(self.mav_points, R)
         translated_points = self.translate_points(rotated_points, mav_position)
@@ -48,7 +48,7 @@ class DrawMav:
     def update(self, state):
         mav_position = np.array([[state.north], [state.east], [-state.altitude]])  # NED coordinates
         # attitude of mav as a rotation matrix R from body to inertial
-        R = Euler2Rotation(state.phi, state.theta, state.psi)
+        R = euler_2_rotation(state.phi, state.theta, state.psi)
         # rotate and translate points defining mav
         rotated_points = self.rotate_points(self.mav_points, R)
         translated_points = self.translate_points(rotated_points, mav_position)
@@ -82,35 +82,35 @@ class DrawMav:
         fuse_w = unit_length
         fuse_l1 = unit_length * 2
         fuse_l2 = unit_length
-        fuse_l3 = unit_length * 4
-        wing_l = unit_length
-        wing_w = unit_length * 6
-        tail_h = unit_length
+        fuse_l3 = unit_length * 5
+        wing_l = unit_length * 1.5
+        wing_w = unit_length * 8
+        tail_h = unit_length * 1.2
         tail_l = unit_length
-        tail_w = unit_length * 2
+        tail_w = unit_length * 3
 
         # points are in NED coordinates
         # define the points on the aircraft following diagram Fig 2.14
-        points = np.array([[1.5, 0, 0],  # point 1
-                           [0.8, 0.4, -0.4],  # point 2
-                           [0.8, -0.4, -0.4],  # point 3
-                           [0.8, -0.4, 0.4],  # point 4
-                           [0.8, 0.4, 0.4],  # point 5
-                           [-4, 0, 0],  # point 6
-                           [0, -3, 0],  # point 7
-                           [-1.5, -3, 0],  # point 8
-                           [-1.5, 3, 0],  # point 9
-                           [0, 3, 0],  # point 10
-                           [-3, 1, 0],  # point 11
-                           [-4, 1, 0],  # point 12
-                           [-4, -1, 0],  # point 13
-                           [-3, -1, 0],  # point 14
-                           [-3, 0, 0],  # point 15
-                           [-4, 0, -1]  # point 16
+        points = np.array([[fuse_l1, 0, 0],  # point 1
+                           [fuse_l2, fuse_w / 2, -fuse_h / 2],  # point 2
+                           [fuse_l2, -fuse_w / 2, -fuse_h / 2],  # point 3
+                           [fuse_l2, -fuse_w / 2, fuse_h / 2],  # point 4
+                           [fuse_l2, fuse_w / 2, fuse_h / 2],  # point 5
+                           [-fuse_l3, 0, 0],  # point 6
+                           [0, -wing_w / 2, 0],  # point 7
+                           [-wing_l, -wing_w / 2, 0],  # point 8
+                           [-wing_l, wing_w / 2, 0],  # point 9
+                           [0, wing_w / 2, 0],  # point 10
+                           [-(fuse_l3 - tail_l), tail_w / 2, 0],  # point 11
+                           [-fuse_l3, tail_w / 2, 0],  # point 12
+                           [-fuse_l3, -tail_w / 2, 0],  # point 13
+                           [-(fuse_l3 - tail_l), -tail_w / 2, 0],  # point 14
+                           [-(fuse_l3 - tail_l), 0, 0],  # point 15
+                           [-fuse_l3, 0, -tail_h]  # point 16
                            ]).T
 
         # scale points for better rendering
-        scale = 6
+        scale = 20
         points = scale * points
 
         #   define the colors for each face of triangular mesh
@@ -134,7 +134,6 @@ class DrawMav:
         meshColors[12] = blue  # tail_v
 
         return points, meshColors
-
 
     def points_to_mesh(self, points):
         """"
