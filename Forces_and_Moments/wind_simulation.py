@@ -9,10 +9,10 @@ sys.path.append('..')
 from tools.transfer_function import TransferFunction
 import numpy as np
 import parameters.wind_parameters as w_para
+import parameters.aerosonde_parameters as MAV
 
-# TODO: According to the book, Va here should be the same as Va in mav_dynamics.py. But I give it a constant here.
-#  However, if Va is time-variant, the wind system becomes a time-variant system, which should be considered carefully.
-Va = 20  # m/s^2
+# "The Dryden models are typically implemented assuming a constant nominal airspeed Va0."  -- page 55
+Va = MAV.Va0  # m/s^2
 sqrt_3 = np.sqrt(3)
 
 
