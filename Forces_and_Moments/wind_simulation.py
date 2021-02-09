@@ -19,25 +19,26 @@ sqrt_3 = np.sqrt(3)
 class WindSimulation:
     def __init__(self, Ts):
         # steady state wind defined in the inertial frame
+        # change the transfer model according to the page 14 of addendum by McLain
         self._steady_state = np.array([[w_para.w_ns],
                                        [w_para.w_es],
                                        [w_para.w_ds]])  # n, e, d; m/s
-        a1 = w_para.sigma_u * np.sqrt(2 * Va / w_para.L_u)
+        a1 = w_para.sigma_u * np.sqrt(2. * Va / (np.pi * w_para.L_u))
         b1 = Va / w_para.L_u
         self.u_w = TransferFunction(num=np.array([[a1]]),
-                                    den=np.array([[1, b1]]),
+                                    den=np.array([[1., b1]]),
                                     Ts=Ts)
-        a2 = w_para.sigma_v * np.sqrt(3 * Va / w_para.L_v)
+        a2 = w_para.sigma_v * np.sqrt(3. * Va / (np.pi * w_para.L_v))
         a3 = a2 * Va / (sqrt_3 * w_para.L_v)
         b2 = Va / w_para.L_v
         self.v_w = TransferFunction(num=np.array([[a2, a3]]),
-                                    den=np.array([[1, 2 * b2, b2 ** 2.0]]),
+                                    den=np.array([[1., 2. * b2, b2 ** 2.]]),
                                     Ts=Ts)
-        a4 = w_para.sigma_w * np.sqrt(3 * Va / w_para.L_w)
+        a4 = w_para.sigma_w * np.sqrt(3. * Va / (np.pi * w_para.L_w))
         a5 = a4 * Va / (sqrt_3 * w_para.L_w)
         b3 = Va / w_para.L_w
         self.w_w = TransferFunction(num=np.array([[a4, a5]]),
-                                    den=np.array([[1, 2 * b3, b3 ** 2.0]]),
+                                    den=np.array([[1., 2. * b3, b3 ** 2.]]),
                                     Ts=Ts)
         self._Ts = Ts
 
