@@ -101,7 +101,7 @@ class DataViewer:
                                    rad2deg=True,
                                    time_window=time_window_length)
         delta_t_plot = PlotboxArgs(plots=['delta_t'],
-                                   labels={'left': 'delta_t(deg)', 'bottom': 'Time (s)'},
+                                   labels={'left': 'delta_t', 'bottom': 'Time (s)'},
                                    rad2deg=False,
                                    time_window=time_window_length)
         fifth_row = [delta_e_plot, delta_a_plot, delta_r_plot, delta_t_plot]

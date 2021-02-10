@@ -187,7 +187,7 @@ class MavDynamics:
     def _forces_moments(self, delta):
         """
         return the forces on the UAV based on the state, wind, and control surfaces
-        :param delta: np.matrix(delta_a, delta_e, delta_r, delta_t)
+        :param delta: MsgDelta()
         :return: Forces and Moments on the UAV np.matrix(Fx, Fy, Fz, Ml, Mn, Mm)
         """
         phi, theta, psi = quaternion_2_euler(self._state[6:10])
@@ -244,14 +244,12 @@ class MavDynamics:
         My = rVS_2 * MAV.c * (MAV.C_m_0 + MAV.C_m_alpha * self._alpha +
                               MAV.C_m_q * MAV.c / (2 * self._Va) * q + MAV.C_m_delta_e * delta.elevator)
         # compute lateral torques in body frame
-        Mx = rVS_2 * MAV.b * \
-             (MAV.C_ell_0 + MAV.C_ell_beta * self._beta + MAV.C_ell_p * MAV.b / (2 * self._Va) * p +
-              MAV.C_ell_r * MAV.b / (2 * self._Va) * r + MAV.C_ell_delta_a * delta.aileron +
-              MAV.C_ell_delta_r * delta.rudder) + \
-             torque_prop
-        Mz = rVS_2 * MAV.b * \
-             (MAV.C_n_0 + MAV.C_n_beta * self._beta + MAV.C_n_p * MAV.b / (2 * self._Va) * p +
-              MAV.C_n_r * MAV.b / (2 * self._Va) * r + MAV.C_n_delta_a * delta.aileron + MAV.C_n_delta_r * delta.rudder)
+        Mx = rVS_2 * MAV.b * (MAV.C_ell_0 + MAV.C_ell_beta * self._beta + MAV.C_ell_p * MAV.b / (2 * self._Va) * p +
+                              MAV.C_ell_r * MAV.b / (2 * self._Va) * r + MAV.C_ell_delta_a * delta.aileron +
+                              MAV.C_ell_delta_r * delta.rudder) + torque_prop
+        Mz = rVS_2 * MAV.b * (MAV.C_n_0 + MAV.C_n_beta * self._beta + MAV.C_n_p * MAV.b / (2 * self._Va) * p +
+                              MAV.C_n_r * MAV.b / (2 * self._Va) * r + MAV.C_n_delta_a * delta.aileron +
+                              MAV.C_n_delta_r * delta.rudder)
 
         self._forces[0] = fx
         self._forces[1] = fy
@@ -276,6 +274,11 @@ class MavDynamics:
         torque_prop = ((MAV.rho * (MAV.D_prop ** 5) * MAV.C_Q0) / (4 * (np.pi ** 2))) * (Omega_p ** 2) + \
                       ((MAV.rho * (MAV.D_prop ** 4) * MAV.C_Q1 * Va) / (2 * np.pi)) * Omega_p + \
                       MAV.rho * (MAV.D_prop ** 3) * MAV.C_Q2 * (Va ** 2)
+
+        # The original motor model, deprecated in addendum.
+        # thrust_prop = 1 / 2 * MAV.rho * MAV.S_prop * MAV.C_prop * ((MAV.k_motor * delta_t) ** 2 - Va ** 2)
+        # torque_prop = - MAV.kTp * (MAV.kOmega * delta_t) ** 2
+
         return thrust_prop, torque_prop
 
     def _update_true_state(self):
