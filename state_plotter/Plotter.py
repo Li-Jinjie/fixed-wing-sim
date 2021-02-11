@@ -14,11 +14,13 @@ from pdb import set_trace
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias=True)
 
+
 class Plotter:
     """
     Class for plotting methods.
     """
-    def __init__(self, plotting_frequency=1, time_window=15):
+
+    def __init__(self, plotting_frequency=1, time_window=15, window_title="States"):
         ''' Initialize the Plotter
 
             plotting_freq: number of times the update function must be called
@@ -47,7 +49,7 @@ class Plotter:
         # initialize Qt gui application and window
         self.default_window_size = (1000, 800)
         self.app = pg.QtGui.QApplication([])
-        self.window = pg.GraphicsWindow(title="States")
+        self.window = pg.GraphicsWindow(title=window_title)
         self.window.resize(*self.default_window_size)
         self.window.setBackground(self.background_color)
         self.old_windows = []
@@ -56,7 +58,6 @@ class Plotter:
         # Define plot argument parser
         self.arg_parser = self._define_plot_arg_parser()
         self.hidden_curve_prefix = '_'
-
 
         self.new_data = False
         self.plot_cnt = 0
@@ -75,8 +76,7 @@ class Plotter:
         # self.xy_marker_postfix = "_marker_"
 
         # asynchronous variable acess protection
-        self.states_lock = Lock() # Lock to prevent asynchronous changes to states
-
+        self.states_lock = Lock()  # Lock to prevent asynchronous changes to states
 
     def define_input_vector(self, vector_name, input_vector):
         ''' Defines an input vector so measurements can be added in groups
@@ -167,10 +167,9 @@ class Plotter:
             raise ValueError("State vector length mismatch. \
                           State vector '{0}' has length {1}".format(vector_name, len(vector_values)))
         if sigma_values is None:
-            sigma_values = [0.]*len(vector_values)
+            sigma_values = [0.] * len(vector_values)
         for i, state in enumerate(self.input_vectors[vector_name]):
             self.add_measurement(state, vector_values[i], time, sigma_values[i])
-
 
     def add_measurement(self, state_name, state_val, time, sigma=0.0):
         '''Adds a measurement for the given state
@@ -184,18 +183,17 @@ class Plotter:
             state_obj.add_data(state_val, time, sigma)
         self.states_lock.release()
         self.new_data = True
-        self.time = max(self.time, time) # Keep track of the latest data point
+        self.time = max(self.time, time)  # Keep track of the latest data point
 
     def set_data(self, state_name, state_vals, times, sigmas=None):
-        if isinstance(times, (int,float)):
-            times = [times]*len(state_vals)
+        if isinstance(times, (int, float)):
+            times = [times] * len(state_vals)
         self.states_lock.acquire()
         for state_obj in self.states[state_name]:
             state_obj.set_data(state_vals, times, sigmas)
         self.states_lock.release()
         self.new_data = True
         self.time = max(self.time, times[-1])
-
 
     # Update the plots with the current data
     def update_plots(self):
@@ -213,7 +211,6 @@ class Plotter:
         # update the plots
         self.app.processEvents()
 
-
     #
     # Private Methods
     #
@@ -222,9 +219,9 @@ class Plotter:
         ''' Adds a plot box to the plotting window '''
         plotbox = StatePlotbox(self.window, plotbox_args)
         if plotbox_args.title in self.plotboxes:
-            raise ValueError('Plotbox with title \"{}\" already exists in the window.'\
-                             .format(plotbox_args.title)\
-                              + ' Cannot add duplicate.')
+            raise ValueError('Plotbox with title \"{}\" already exists in the window.' \
+                             .format(plotbox_args.title) \
+                             + ' Cannot add duplicate.')
         self.plotboxes[plotbox_args.title] = plotbox
         self._add_states(plotbox)
         self.row_plot_count += 1
@@ -234,7 +231,7 @@ class Plotter:
 
     def _add_states(self, plotbox):
         states = plotbox.get_states()
-        for k,v in states.items():
+        for k, v in states.items():
             self.states[k].append(v)
 
     def _define_plot_arg_parser(self):
@@ -280,7 +277,7 @@ class Plotter:
 
         plots = []
         for c in np.reshape(args.curves, (-1, args.dimension)):
-            plot_name = self.multi_dim_state_delimiter.join(c) # If dim > 1, join the states together
+            plot_name = self.multi_dim_state_delimiter.join(c)  # If dim > 1, join the states together
             plots.append(PlotArgs(plot_name, states=c))
         for h in args.hidden_curves:
             plots.append(PlotArgs(h, hidden=True))

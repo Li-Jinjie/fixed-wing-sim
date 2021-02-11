@@ -9,10 +9,12 @@ part of mavsim_python
 """
 import numpy as np
 
-class msg_path:
+
+class MsgPath:
     def __init__(self):
-        # flag='line' means straight line following, flag='orbit' means orbit following
-        self.flag = 'line'
+        # type='line' means straight line following, type='orbit' means orbit following
+        self.type = 'line'
+        #self.type = 'orbit'
         # desired airspeed along the path
         self.airspeed = 25
         # origin of the straight path line (r)
@@ -25,3 +27,5 @@ class msg_path:
         self.orbit_radius = 50
         # orbit direction: 'CW'==clockwise, 'CCW'==counter clockwise
         self.orbit_direction = 'CW'
+        # flag that indicates that path has been plotted
+        self.plot_updated = False

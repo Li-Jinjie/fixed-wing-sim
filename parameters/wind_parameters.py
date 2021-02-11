@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+'''
+Author: LI Jinjie
+File: transfer_function_coef.py
+Date: 2021/2/1 9:53
+LastEditors: LI Jinjie
+LastEditTime: 2021/2/1 9:53
+Description: The wind parameters from page 56.
+'''
+
 import sys
 
 sys.path.append('..')

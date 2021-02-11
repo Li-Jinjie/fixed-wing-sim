@@ -8,7 +8,8 @@ part of mavsim_python
         2/16/2019 - RWB
 """
 
-class msg_sensors:
+
+class MsgSensors:
     def __init__(self):
         self.gyro_x = 0  # gyroscope along body x axis
         self.gyro_y = 0  # gyroscope along body y axis
@@ -19,7 +20,7 @@ class msg_sensors:
         self.mag_x = 0  # magnetic field along body x axis
         self.mag_y = 0  # magnetic field along body y axis
         self.mag_z = 0  # magnetic field along body z axis
-        self.static_pressure = 0  # static pressure
+        self.abs_pressure = 0  # absolute pressure
         self.diff_pressure = 0  # differential pressure
         self.gps_n = 0  # gps north
         self.gps_e = 0  # gps east

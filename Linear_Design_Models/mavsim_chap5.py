@@ -1,42 +1,40 @@
 """
-mavSimPy 
+mavsim_python
     - Chapter 5 assignment for Beard & McLain, PUP, 2012
-    - Update history:  
-        1/1/2019 - RWB
-        1/29/2019 - RWB
+    - Last Update:
         2/2/2019 - RWB
 """
 import sys
-
 sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
 
-from Coordinate_Frames.spacecraft_viewer import spacecraft_viewer
-from Coordinate_Frames.video_writer import video_writer
-from Kinematics_and_Dynamics.data_viewer import data_viewer
-from Forces_and_Moments.mav_dynamics import mav_dynamics
-from Forces_and_Moments.wind_simulation import wind_simulation
+from Coordinate_Frames.mav_viewer import MavViewer
+from Kinematics_and_Dynamics.data_viewer import DataViewer
+from Forces_and_Moments.mav_dynamics import MavDynamics
+from Forces_and_Moments.wind_simulation import WindSimulation
 from Linear_Design_Models.trim import compute_trim
-from Linear_Design_Models.compute_models import compute_ss_model, compute_tf_model
+from Linear_Design_Models.compute_models import compute_model
+from tools.signals import Signals
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
-mav_view = spacecraft_viewer()  # initialize the mav viewer
-data_view = data_viewer()  # initialize view of data plots
-if VIDEO == True:
-    video = video_writer(video_name="chap5_video.avi",
-                         bounding_box=(0, 0, 1000, 1000),
-                         output_rate=SIM.ts_video)
+mav_view = MavViewer()  # initialize the mav viewer
+data_view = DataViewer()  # initialize view of data plots
+if VIDEO is True:
+    from Coordinate_Frames.video_writer import VideoWriter
+    video = VideoWriter(video_name="chap5_video.avi",
+                        bounding_box=(0, 0, 1000, 1000),
+                        output_rate=SIM.ts_video)
 
 # initialize elements of the architecture
-wind = wind_simulation(SIM.ts_simulation)
-mav = mav_dynamics(SIM.ts_simulation)
+wind = WindSimulation(SIM.ts_simulation)
+mav = MavDynamics(SIM.ts_simulation)
 
 # use compute_trim function to compute trim state and trim input
-Va = 30.
-gamma = 5. * np.pi / 180.
-Radius = -150  # straight line: np.inf
+Va = 25.
+gamma = 0. * np.pi / 180.
+Radius = np.inf  # straight line: np.inf
 
 trim_state, trim_input = compute_trim(mav, Va, gamma, Radius)
 # print("trim states: \r\n", trim_state)
@@ -47,10 +45,12 @@ mav._update_velocity_data()  # update Va, alpha, beta to match the new state abo
 delta = trim_input  # set input to constant constant trim input
 
 # # compute the state space model linearized about trim
-A_lon, B_lon, A_lat, B_lat = compute_ss_model(mav, trim_state, trim_input)
+compute_model(mav, trim_state, trim_input)
 
-T_phi_delta_a, T_chi_phi, T_beta_delta_r, T_theta_delta_e, T_h_theta, T_h_Va, T_Va_delta_t, T_Va_theta \
-    = compute_tf_model(mav, trim_state, trim_input)
+# this signal will be used to excite modes
+input_signal = Signals(amplitude=.05,
+                       duration=0.01,
+                       start_time=2.0)
 
 # initialize the simulation time
 sim_time = SIM.start_time
@@ -60,21 +60,28 @@ print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
 
     # -------physical system-------------
-    # current_wind = wind.update()  # get the new wind vector
+    #current_wind = wind.update()  # get the new wind vector
     current_wind = np.zeros((6, 1))
-    mav.update_state(delta, current_wind)  # propagate the MAV dynamics
+    # this input excites the phugoid mode by adding an impulse at t=5.0
+    # delta[0][0] += input_signal.impulse(sim_time)
+    mav.update(delta, current_wind)  # propagate the MAV dynamics
 
     # -------update viewer-------------
-    mav_view.update(mav.msg_true_state)  # plot body of MAV
-    data_view.update(mav.msg_true_state,  # true states
-                     mav.msg_true_state,  # estimated states
-                     mav.msg_true_state,  # commanded states
+    mav_view.update(mav.true_state)  # plot body of MAV
+    data_view.update(mav.true_state,  # true states
+                     mav.true_state,  # estimated states
+                     mav.true_state,  # commanded states
+                     delta,  # input to aircraft
                      SIM.ts_simulation)
-    if VIDEO == True:
+    if VIDEO is True:
         video.update(sim_time)
 
     # -------increment time-------------
     sim_time += SIM.ts_simulation
 
-if VIDEO == True:
+if VIDEO is True:
     video.close()
+
+
+
+

@@ -11,23 +11,25 @@ sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
 
-from Coordinate_Frames.spacecraft_viewer import spacecraft_viewer
-from Kinematics_and_Dynamics.data_viewer import data_viewer
-from Kinematics_and_Dynamics.mav_dynamics import mav_dynamics
+from Coordinate_Frames.mav_viewer import MavViewer
+from Kinematics_and_Dynamics.data_viewer import DataViewer
+from Kinematics_and_Dynamics.mav_dynamics import MavDynamics
+from message_types.msg_delta import MsgDelta
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
-mav_view = spacecraft_viewer()  # initialize the mav viewer
-data_view = data_viewer()  # initialize view of data plots
-if VIDEO == True:
-    from Coordinate_Frames.video_writer import video_writer
+mav_view = MavViewer()  # initialize the mav viewer
+data_view = DataViewer()  # initialize view of data plots
+if VIDEO is True:
+    from Coordinate_Frames.video_writer import VideoWriter
 
-    video = video_writer(video_name="chap3_video.avi",
-                         bounding_box=(0, 0, 1000, 1000),
-                         output_rate=SIM.ts_video)
+    video = VideoWriter(video_name="chap3_video.avi",
+                        bounding_box=(0, 0, 1000, 1000),
+                        output_rate=SIM.ts_video)
 
 # initialize elements of the architecture
-mav = mav_dynamics(SIM.ts_simulation)
+mav = MavDynamics(SIM.ts_simulation)
+delta = MsgDelta()
 
 # initialize the simulation time
 sim_time = SIM.start_time
@@ -45,17 +47,20 @@ while sim_time < SIM.end_time:
     forces_moments = np.array([[fx, fy, fz, Mx, My, Mz]]).T
 
     # -------physical system-------------
-    mav.update_state(forces_moments)  # propagate the MAV dynamics
+    mav.update(forces_moments)  # propagate the MAV dynamics
 
     # -------update viewer-------------
-    mav_view.update(mav.msg_true_state)  # plot body of MAV
-    data_view.update(mav.msg_true_state,  # true states
-                     mav.msg_true_state,  # estimated states
-                     mav.msg_true_state,  # commanded states
+    mav_view.update(mav.true_state)  # plot body of MAV
+    data_view.update(mav.true_state,  # true states
+                     mav.true_state,  # estimated states
+                     mav.true_state,  # commanded states
+                     delta,  # inputs to the aircraft
                      SIM.ts_simulation)
-    if VIDEO == True: video.update(sim_time)
+    if VIDEO is True:
+        video.update(sim_time)
 
     # -------increment time-------------
     sim_time += SIM.ts_simulation
 
-if VIDEO == True: video.close()
+if VIDEO is True:
+    video.close()

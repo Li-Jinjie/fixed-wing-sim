@@ -2,24 +2,24 @@
 compute_trim 
     - Chapter 5 assignment for Beard & McLain, PUP, 2012
     - Update history:  
-        2/5/2019 - RWB
+        12/29/2018 - RWB
 """
 import sys
 
 sys.path.append('..')
 import numpy as np
 from scipy.optimize import minimize
-from tools.tools import Euler2Quaternion, Quaternion2Euler
+from tools.rotations import euler_2_quaternion, quaternion_2_euler
+from message_types.msg_delta import MsgDelta
 
 
 def compute_trim(mav, Va, gamma, Radius):
     # define initial state and input
     state0 = mav._state
-    delta0 = np.zeros([4, 1])  # delta_e, delta_a, delta_r, delta_t
     # PAY ATTENTION: The initial value is VERY CRITICAL to the final solution. [0,0,0,1] in p278.
-    delta0[3] = 1  # delta_t
+    delta0 = MsgDelta(throttle=1)
 
-    x0 = np.concatenate((state0, delta0), axis=0)
+    x0 = np.concatenate((state0, delta0.to_array()), axis=0)
     # define equality constraints
     # An explanation about lambda: https://www.w3schools.com/python/python_lambda.asp
     # An explanation about scipy.optimize.minimize: https://docs.scipy.org/doc/scipy/reference/tutorial/optimize.html
@@ -47,16 +47,19 @@ def compute_trim(mav, Va, gamma, Radius):
              })
     # 'jac' means the Jacobin matrix of constrain functions to x
     # solve the minimization problem to find the trim states and inputs
-    res = minimize(trim_objective, x0, method='SLSQP', args=(mav, Va, gamma, Radius),
+    res = minimize(trim_objective_fun, x0, method='SLSQP', args=(mav, Va, gamma, Radius),
                    constraints=cons, options={'ftol': 1e-10, 'disp': True})
     # extract trim state and input and return
     trim_state = np.array([res.x[0:13]]).T
-    trim_input = np.array([res.x[13:17]]).T
+    trim_input = MsgDelta(elevator=res.x.item(13), aileron=res.x.item(14),
+                          rudder=res.x.item(15), throttle=res.x.item(16))
+    # trim_input.print()
+    # print('trim_state=', trim_state.T)
     return trim_state, trim_input
 
 
 # objective function to be minimized
-def trim_objective(x, mav, Va, gamma, Radius):
+def trim_objective_fun(x, mav, Va, gamma, Radius):
     # Read Algorithm 14 in page 283.
     # Watch the solution about chapter 5 on Youtube.
     # Use euler angle only. Do not use quaternion here since quaternion_trim_dot cannot be calculated without e0_trim,
@@ -79,14 +82,15 @@ def trim_objective(x, mav, Va, gamma, Radius):
 
     # Step 2: compute x_quat_dot = f(x,u) using x and {mav._forces_moments(), mav._derivatives()}
     state = np.array([x[0:13]]).T
-    delta = np.array([x[13:17]]).T
+    delta = MsgDelta(elevator=x.item(13), aileron=x.item(14), rudder=x.item(15), throttle=x.item(16))
+
     mav._state = state
     mav._update_velocity_data()  # update Va, alpha, beta to match new states
     forces_moments = mav._forces_moments(delta)
     x_quat_dot = mav._derivatives(state, forces_moments)
 
     # Step 3: # convert x_quat_dot to x_euler_dot using x, refer to (3.3) in page 31
-    phi, theta, psi = Quaternion2Euler(x[6:10])
+    phi, theta, psi = quaternion_2_euler(x[6:10])
     p, q, r = x.item(10), x.item(11), x.item(12)
 
     rot_tran = np.array([[1, np.sin(phi) * np.tan(theta), np.cos(phi) * np.tan(theta)],

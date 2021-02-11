@@ -7,7 +7,8 @@ mavsim_python
 import numpy as np
 import matplotlib.pyplot as plt
 
-class signals:
+
+class Signals:
     def __init__(self,
                  amplitude=1.0,
                  frequency=1.0,
@@ -92,7 +93,7 @@ class signals:
 
 if __name__ == "__main__":
     # instantiate the system
-    input = signals(amplitude=2.0, frequency=2.0)
+    input = Signals(amplitude=2.0, frequency=2.0)
     Ts = 0.01
 
     # main simulation loop
