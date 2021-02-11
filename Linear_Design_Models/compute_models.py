@@ -95,20 +95,20 @@ def compute_tf_model(mav, trim_state, trim_input):
     phi, theta_trim, psi = quaternion_2_euler(trim_state[6:10])
 
     # define transfer function constants
-    rV2Sb_2 = (1 / 2) * MAV.rho * (Va_trim ** 2) * MAV.S_wing * MAV.b
-    a_phi1 = -rV2Sb_2 * MAV.C_p_p * MAV.b / (2 * Va_trim)
+    rV2Sb_2 = (1. / 2.) * MAV.rho * (Va_trim ** 2) * MAV.S_wing * MAV.b
+    a_phi1 = -rV2Sb_2 * MAV.C_p_p * MAV.b / (2. * Va_trim)
     a_phi2 = rV2Sb_2 * MAV.C_p_delta_a
 
-    rV2cS_2Jy = (MAV.rho * (Va_trim ** 2) * MAV.c * MAV.S_wing / (2 * MAV.Jy))
-    a_theta1 = - rV2cS_2Jy * MAV.C_m_q * (MAV.c / (2 * Va_trim))
+    rV2cS_2Jy = (MAV.rho * (Va_trim ** 2) * MAV.c * MAV.S_wing / (2. * MAV.Jy))
+    a_theta1 = - rV2cS_2Jy * MAV.C_m_q * (MAV.c / (2. * Va_trim))
     a_theta2 = - rV2cS_2Jy * MAV.C_m_alpha
     a_theta3 = rV2cS_2Jy * MAV.C_m_delta_e
 
     # Compute transfer function coefficients using new propulsion model
     a_V1 = (MAV.rho * Va_trim * MAV.S_wing / MAV.mass) * \
-           (MAV.C_D_0 + MAV.C_D_alpha * alpha_trim + MAV.C_D_delta_e * trim_input.elevator) + \
-           -(1 / MAV.mass) * dT_dVa(mav, Va_trim, trim_input.throttle)
-    a_V2 = (1 / MAV.mass) * dT_ddelta_t(mav, Va_trim, trim_input.throttle)
+           (MAV.C_D_0 + MAV.C_D_alpha * alpha_trim + MAV.C_D_delta_e * trim_input.elevator) - \
+           (1. / MAV.mass) * dT_dVa(mav, Va_trim, trim_input.throttle)
+    a_V2 = (1. / MAV.mass) * dT_ddelta_t(mav, Va_trim, trim_input.throttle)
     a_V3 = MAV.gravity * np.cos(theta_trim - alpha_trim)
 
     return Va_trim, alpha_trim, theta_trim, a_phi1, a_phi2, a_theta1, a_theta2, a_theta3, a_V1, a_V2, a_V3
@@ -140,35 +140,35 @@ def compute_ss_model(mav, trim_state, trim_input):
     beta = mav._beta
 
     # m: External moment applied to the airframe about the body frame y-axis.
-    rVS_2 = MAV.rho * (Va ** 2) * MAV.S_wing / 2
+    rVS_2 = MAV.rho * (Va ** 2) * MAV.S_wing / 2.
     m = rVS_2 * MAV.c * (MAV.C_m_0 + MAV.C_m_alpha * alpha +
-                         MAV.C_m_q * MAV.c / (2 * Va) * q + MAV.C_m_delta_e * delta_e)
+                         MAV.C_m_q * MAV.c / (2. * Va) * q + MAV.C_m_delta_e * delta_e)
 
     # Lateral Model Coefficients
-    Y_v = MAV.rho * MAV.S_wing * MAV.b * v / (4 * m * Va) * (MAV.C_Y_p * p + MAV.C_Y_r * r) \
+    Y_v = MAV.rho * MAV.S_wing * MAV.b * v / (4. * m * Va) * (MAV.C_Y_p * p + MAV.C_Y_r * r) \
           + (MAV.rho * MAV.S_wing * v / MAV.mass) * (
                   MAV.C_Y_0 + MAV.C_Y_beta * beta + MAV.C_Y_delta_a * delta_a + MAV.C_Y_delta_r * delta_r) \
-          + (MAV.rho * MAV.S_wing * MAV.C_Y_beta / (2 * MAV.mass)) * np.sqrt(u ** 2 + w ** 2)
-    Y_p = w + (MAV.rho * Va * MAV.S_wing * MAV.b / (4 * m)) * MAV.C_Y_p
-    Y_r = -u + (MAV.rho * Va * MAV.S_wing * MAV.b / (4 * m)) * MAV.C_Y_r
-    Y_delta_a = (MAV.rho * (Va ** 2) * MAV.S_wing / (2 * MAV.mass)) * MAV.C_Y_delta_a
-    Y_delta_r = (MAV.rho * (Va ** 2) * MAV.S_wing / (2 * MAV.mass)) * MAV.C_Y_delta_r
-    L_v = MAV.rho * MAV.S_wing * (MAV.b ** 2) * v / (4 * Va) * (MAV.C_p_p * p + MAV.C_p_r * r) \
+          + (MAV.rho * MAV.S_wing * MAV.C_Y_beta / (2. * MAV.mass)) * np.sqrt(u ** 2 + w ** 2)
+    Y_p = w + (MAV.rho * Va * MAV.S_wing * MAV.b / (4. * m)) * MAV.C_Y_p
+    Y_r = -u + (MAV.rho * Va * MAV.S_wing * MAV.b / (4. * m)) * MAV.C_Y_r
+    Y_delta_a = (MAV.rho * (Va ** 2) * MAV.S_wing / (2. * MAV.mass)) * MAV.C_Y_delta_a
+    Y_delta_r = (MAV.rho * (Va ** 2) * MAV.S_wing / (2. * MAV.mass)) * MAV.C_Y_delta_r
+    L_v = MAV.rho * MAV.S_wing * (MAV.b ** 2) * v / (4. * Va) * (MAV.C_p_p * p + MAV.C_p_r * r) \
           + MAV.rho * MAV.S_wing * MAV.b * v * (
                   MAV.C_p_0 + MAV.C_p_beta * beta + MAV.C_p_delta_a * delta_a + MAV.C_p_delta_r * delta_r) \
-          + (MAV.rho * MAV.S_wing * MAV.b * MAV.C_p_beta / 2) * np.sqrt(u ** 2 + w ** 2)
-    L_p = MAV.gamma1 * q + (MAV.rho * Va * MAV.S_wing * (MAV.b ** 2) / 4) * MAV.C_p_p
-    L_r = -MAV.gamma2 * q + (MAV.rho * Va * MAV.S_wing * (MAV.b ** 2) / 4) * MAV.C_p_r
-    L_delta_a = (MAV.rho * (Va ** 2) * MAV.S_wing * MAV.b / 2) * MAV.C_p_delta_a
-    L_delta_r = (MAV.rho * (Va ** 2) * MAV.S_wing * MAV.b / 2) * MAV.C_p_delta_r
-    N_v = MAV.rho * MAV.S_wing * (MAV.b ** 2) * v / (4 * Va) * (MAV.C_r_p * p + MAV.C_r_r * r) \
+          + (MAV.rho * MAV.S_wing * MAV.b * MAV.C_p_beta / 2.) * np.sqrt(u ** 2 + w ** 2)
+    L_p = MAV.gamma1 * q + (MAV.rho * Va * MAV.S_wing * (MAV.b ** 2) / 4.) * MAV.C_p_p
+    L_r = -MAV.gamma2 * q + (MAV.rho * Va * MAV.S_wing * (MAV.b ** 2) / 4.) * MAV.C_p_r
+    L_delta_a = (MAV.rho * (Va ** 2) * MAV.S_wing * MAV.b / 2.) * MAV.C_p_delta_a
+    L_delta_r = (MAV.rho * (Va ** 2) * MAV.S_wing * MAV.b / 2.) * MAV.C_p_delta_r
+    N_v = MAV.rho * MAV.S_wing * (MAV.b ** 2) * v / (4. * Va) * (MAV.C_r_p * p + MAV.C_r_r * r) \
           + MAV.rho * MAV.S_wing * MAV.b * v * (
                   MAV.C_r_0 + MAV.C_r_beta * beta + MAV.C_r_delta_a * delta_a + MAV.C_r_delta_r * delta_r) \
-          + (MAV.rho * MAV.S_wing * MAV.b * MAV.C_r_beta / 2) * np.sqrt(u ** 2 + w ** 2)
-    N_p = MAV.gamma7 * q + (MAV.rho * Va * MAV.S_wing * (MAV.b ** 2) / 4) * MAV.C_r_p
-    N_r = -MAV.gamma1 * q + (MAV.rho * Va * MAV.S_wing * (MAV.b ** 2) / 4) * MAV.C_r_r
-    N_delta_a = (MAV.rho * (Va ** 2) * MAV.S_wing * MAV.b / 2) * MAV.C_r_delta_a
-    N_delta_r = (MAV.rho * (Va ** 2) * MAV.S_wing * MAV.b / 2) * MAV.C_r_delta_r
+          + (MAV.rho * MAV.S_wing * MAV.b * MAV.C_r_beta / 2.) * np.sqrt(u ** 2 + w ** 2)
+    N_p = MAV.gamma7 * q + (MAV.rho * Va * MAV.S_wing * (MAV.b ** 2) / 4.) * MAV.C_r_p
+    N_r = -MAV.gamma1 * q + (MAV.rho * Va * MAV.S_wing * (MAV.b ** 2) / 4.) * MAV.C_r_r
+    N_delta_a = (MAV.rho * (Va ** 2) * MAV.S_wing * MAV.b / 2.) * MAV.C_r_delta_a
+    N_delta_r = (MAV.rho * (Va ** 2) * MAV.S_wing * MAV.b / 2.) * MAV.C_r_delta_r
 
     A_lat_14 = MAV.gravity * np.cos(theta) * np.cos(phi)
     A_lat_43 = np.cos(phi) * np.tan(theta)
@@ -194,37 +194,37 @@ def compute_ss_model(mav, trim_state, trim_input):
     [[C_X_0, C_X_q, C_X_alpha, C_X_delta_e],
      [C_Z_0, C_Z_q, C_Z_alpha, C_Z_delta_e]] = np.array([[np.cos(alpha), -np.sin(alpha)],
                                                          [np.sin(alpha), np.cos(alpha)]]) @ \
-                                               -np.array([[MAV.C_D_0, MAV.C_D_q, MAV.C_D_alpha, MAV.C_D_delta_e],
-                                                          [MAV.C_L_0, MAV.C_L_q, MAV.C_L_alpha, MAV.C_L_delta_e]])
+                                               np.array([[-MAV.C_D_0, -MAV.C_D_q, -MAV.C_D_alpha, -MAV.C_D_delta_e],
+                                                         [-MAV.C_L_0, -MAV.C_L_q, -MAV.C_L_alpha, -MAV.C_L_delta_e]])
 
     dT_du = dT_dVa(mav, Va, delta_t) * u / Va  # I calculate this. --LJJ
     dT_dw = dT_dVa(mav, Va, delta_t) * w / Va
     X_u = (u * MAV.rho * MAV.S_wing / MAV.mass) * (C_X_0 + C_X_alpha * alpha + C_X_delta_e * delta_e) \
-          - (MAV.rho * MAV.S_wing * C_X_alpha * w / (2 * MAV.mass)) \
-          + (MAV.rho * MAV.S_wing * MAV.c * C_X_q * u * q / (4 * MAV.mass * Va)) + dT_du
+          - (MAV.rho * MAV.S_wing * C_X_alpha * w / (2. * MAV.mass)) \
+          + (MAV.rho * MAV.S_wing * MAV.c * C_X_q * u * q / (4. * MAV.mass * Va)) + dT_du
 
     X_w = -q + w * MAV.rho * MAV.S_wing / MAV.mass * (C_X_0 + C_X_alpha * alpha + C_X_delta_e * delta_e) \
-          + (MAV.rho * MAV.S_wing * C_X_alpha * u / (2 * MAV.mass)) \
-          + (MAV.rho * MAV.S_wing * MAV.c * C_X_q * w * q / (4 * MAV.mass * Va)) + dT_dw
-    X_q = -w + (MAV.rho * Va * MAV.S_wing * C_X_q * MAV.c / (4 * MAV.mass))
-    X_delta_e = (MAV.rho * (Va ** 2) * MAV.S_wing * C_X_delta_e / (2 * MAV.mass))
+          + (MAV.rho * MAV.S_wing * C_X_alpha * u / (2. * MAV.mass)) \
+          + (MAV.rho * MAV.S_wing * MAV.c * C_X_q * w * q / (4. * MAV.mass * Va)) + dT_dw
+    X_q = -w + (MAV.rho * Va * MAV.S_wing * C_X_q * MAV.c / (4. * MAV.mass))
+    X_delta_e = (MAV.rho * (Va ** 2) * MAV.S_wing * C_X_delta_e / (2. * MAV.mass))
     X_delta_t = dT_ddelta_t(mav, Va, delta_t)
     Z_u = q + (u * MAV.rho * MAV.S_wing / MAV.mass) * (C_Z_0 + C_Z_alpha * alpha + C_Z_delta_e * delta_e) \
-          - (MAV.rho * MAV.S_wing * C_Z_alpha * w / (2 * MAV.mass)) \
-          + (u * MAV.rho * MAV.S_wing * C_Z_q * MAV.c * q / (4 * MAV.mass * Va))
+          - (MAV.rho * MAV.S_wing * C_Z_alpha * w / (2. * MAV.mass)) \
+          + (u * MAV.rho * MAV.S_wing * C_Z_q * MAV.c * q / (4. * MAV.mass * Va))
     Z_w = (w * MAV.rho * MAV.S_wing / MAV.mass) * (C_Z_0 + C_Z_alpha * alpha + C_Z_delta_e * delta_e) \
-          + (MAV.rho * MAV.S_wing * C_Z_alpha * u / (2 * MAV.mass)) \
-          + (w * MAV.rho * MAV.S_wing * C_Z_q * MAV.c * q / (4 * MAV.mass * Va))
-    Z_q = u + (MAV.rho * Va * MAV.S_wing * C_Z_q * MAV.c / (4 * MAV.mass))
-    Z_delta_e = (MAV.rho * (Va ** 2) * MAV.S_wing * C_Z_delta_e / (2 * MAV.mass))
+          + (MAV.rho * MAV.S_wing * C_Z_alpha * u / (2. * MAV.mass)) \
+          + (w * MAV.rho * MAV.S_wing * C_Z_q * MAV.c * q / (4. * MAV.mass * Va))
+    Z_q = u + (MAV.rho * Va * MAV.S_wing * C_Z_q * MAV.c / (4. * MAV.mass))
+    Z_delta_e = (MAV.rho * (Va ** 2) * MAV.S_wing * C_Z_delta_e / (2. * MAV.mass))
     M_u = u * MAV.rho * MAV.S_wing * MAV.c / MAV.Jy * (MAV.C_m_0 + MAV.C_m_alpha * alpha + MAV.C_m_delta_e * delta_e) \
-          - (MAV.rho * MAV.S_wing * MAV.c * MAV.C_m_alpha * w / (2 * MAV.Jy)) \
-          + (MAV.rho * MAV.S_wing * (MAV.c ** 2) * MAV.C_m_q * q * u / (4 * MAV.Jy * Va))
+          - (MAV.rho * MAV.S_wing * MAV.c * MAV.C_m_alpha * w / (2. * MAV.Jy)) \
+          + (MAV.rho * MAV.S_wing * (MAV.c ** 2.) * MAV.C_m_q * q * u / (4. * MAV.Jy * Va))
     M_w = (w * MAV.rho * MAV.S_wing * MAV.c / MAV.Jy) * (MAV.C_m_0 + MAV.C_m_alpha * alpha + MAV.C_m_delta_e * delta_e) \
-          + (MAV.rho * MAV.S_wing * MAV.c * MAV.C_m_alpha * u / (2 * MAV.Jy)) \
-          + (MAV.rho * MAV.S_wing * (MAV.c ** 2) * MAV.C_m_q * q * w / (4 * MAV.Jy * Va))
-    M_q = (MAV.rho * Va * MAV.S_wing * (MAV.c ** 2) * MAV.C_m_q / (4 * MAV.Jy))
-    M_delta_e = (MAV.rho * (Va ** 2) * MAV.S_wing * MAV.c * MAV.C_m_delta_e / (2 * MAV.Jy))
+          + (MAV.rho * MAV.S_wing * MAV.c * MAV.C_m_alpha * u / (2. * MAV.Jy)) \
+          + (MAV.rho * MAV.S_wing * (MAV.c ** 2.) * MAV.C_m_q * q * w / (4. * MAV.Jy * Va))
+    M_q = (MAV.rho * Va * MAV.S_wing * (MAV.c ** 2.) * MAV.C_m_q / (4. * MAV.Jy))
+    M_delta_e = (MAV.rho * (Va ** 2.) * MAV.S_wing * MAV.c * MAV.C_m_delta_e / (2. * MAV.Jy))
 
     A_lon_12 = X_w * Va * np.cos(alpha)
     A_lon_14 = -MAV.gravity * np.cos(theta)
@@ -302,7 +302,7 @@ def quaternion_state(x_euler):
 
 def dT_dVa(mav, Va, delta_t):
     # returns the derivative of motor thrust with respect to Va
-    eps = mav._ts_simulation  # TODO: check this
+    eps = 1e-5
     T_eps, Q_eps = mav._motor_thrust_torque(Va + eps, delta_t)
     T, Q = mav._motor_thrust_torque(Va, delta_t)
     return (T_eps - T) / eps
@@ -310,7 +310,7 @@ def dT_dVa(mav, Va, delta_t):
 
 def dT_ddelta_t(mav, Va, delta_t):
     # returns the derivative of motor thrust with respect to delta_t
-    eps = mav._ts_simulation  # TODO: check this
+    eps = 1e-5
     T_eps, Q_eps = mav._motor_thrust_torque(Va, delta_t + eps)
     T, Q = mav._motor_thrust_torque(Va, delta_t)
     return (T_eps - T) / eps
