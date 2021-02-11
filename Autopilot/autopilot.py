@@ -11,45 +11,40 @@ sys.path.append('..')
 import parameters.control_parameters as AP
 from tools.transfer_function import TransferFunction
 from tools.wrap import wrap
-from Autopilot.pid_control import PidControl, PiControl, PdControlWithRate
+from Autopilot.pi_control import PIControl
+from Autopilot.pd_control_with_rate import PDControlWithRate
 from message_types.msg_state import MsgState
+from message_types.msg_delta import MsgDelta
 
 
-class AutoPilot:
+class Autopilot:
     def __init__(self, ts_control):
         # instantiate lateral controllers
-        self.roll_from_aileron = PdControlWithRate(
+        self.roll_from_aileron = PDControlWithRate(
             kp=AP.roll_kp,
             kd=AP.roll_kd,
             limit=np.radians(45))
-        self.course_from_roll = PiControl(
+        self.course_from_roll = PIControl(
             kp=AP.course_kp,
             ki=AP.course_ki,
             Ts=ts_control,
             limit=np.radians(30))
-        self.sideslip_from_rudder = PiControl(
-            kp=AP.sideslip_kp,
-            ki=AP.sideslip_ki,
-            Ts=ts_control,
-            limit=np.radians(45))
-
-        # Please read the page 38 in uavbook_supplement.pdf
         self.yaw_damper = TransferFunction(
             num=np.array([[AP.yaw_damper_kr, 0]]),
-            den=np.array([[1, 1 / AP.yaw_damper_p_wo]]),
+            den=np.array([[1, AP.yaw_damper_p_wo]]),
             Ts=ts_control)
 
         # instantiate lateral controllers
-        self.pitch_from_elevator = PdControlWithRate(
+        self.pitch_from_elevator = PDControlWithRate(
             kp=AP.pitch_kp,
             kd=AP.pitch_kd,
             limit=np.radians(45))
-        self.altitude_from_pitch = PiControl(
+        self.altitude_from_pitch = PIControl(
             kp=AP.altitude_kp,
             ki=AP.altitude_ki,
             Ts=ts_control,
             limit=np.radians(30))
-        self.airspeed_from_throttle = PiControl(
+        self.airspeed_from_throttle = PIControl(
             kp=AP.airspeed_throttle_kp,
             ki=AP.airspeed_throttle_ki,
             Ts=ts_control,
@@ -57,26 +52,29 @@ class AutoPilot:
         self.commanded_state = MsgState()
 
     def update(self, cmd, state):
-        # state is MsgState(), store a lot of information
 
         # lateral autopilot
-        chi_c = wrap(cmd.course_command, state.chi)  # attention to wrap() here
+        chi_c = wrap(cmd.course_command, state.chi)  # pay attention to wrap() here
         phi_c = self.saturate(cmd.phi_feedforward + self.course_from_roll.update(chi_c, state.chi), -np.radians(30),
                               np.radians(30))
         delta_a = self.roll_from_aileron.update(phi_c, state.phi, state.p)  # phi_dot = p
-        # delta_r = self.sideslip_from_rudder.update(0, state.beta)
         delta_r = self.yaw_damper.update(state.r)  # uncomment this line if the side-slip angle is unmeasurable.
 
         # longitudinal autopilot
-        h_c = self.saturate(cmd.altitude_command, state.h - AP.altitude_zone, state.h + AP.altitude_zone)
-        theta_c = self.altitude_from_pitch.update(h_c, state.h)
+        # saturate the altitude command
+        altitude_c = self.saturate(cmd.altitude_command, state.altitude - AP.altitude_zone,
+                                   state.altitude + AP.altitude_zone)
+        theta_c = self.altitude_from_pitch.update(altitude_c, state.altitude)
         delta_e = self.pitch_from_elevator.update(theta_c, state.theta, state.q)  # theta_dot is approximately ~ q
         delta_t = self.airspeed_from_throttle.update(cmd.airspeed_command, state.Va)  # delta_t_* is not known
         delta_t = self.saturate(delta_t, 0.0, 1.0)
 
         # construct output and commanded states
-        delta = np.array([[delta_e], [delta_a], [delta_r], [delta_t]])
-        self.commanded_state.h = cmd.altitude_command
+        delta = MsgDelta(elevator=delta_e,
+                         aileron=delta_a,
+                         rudder=delta_r,
+                         throttle=delta_t)
+        self.commanded_state.altitude = cmd.altitude_command
         self.commanded_state.Va = cmd.airspeed_command
         self.commanded_state.phi = phi_c
         self.commanded_state.theta = theta_c
