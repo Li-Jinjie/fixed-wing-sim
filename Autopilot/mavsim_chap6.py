@@ -39,15 +39,15 @@ commands = MsgAutopilot()
 Va_command = Signals(dc_offset=25.0,
                      amplitude=3.0,
                      start_time=2.0,
-                     frequency=0.01)
+                     frequency=0.02)
 altitude_command = Signals(dc_offset=100.0,
                            amplitude=10.0,
                            start_time=0.0,
-                           frequency=0.02)
-course_command = Signals(dc_offset=np.radians(180),
+                           frequency=0.04)
+course_command = Signals(dc_offset=np.radians(0),
                          amplitude=np.radians(45),
                          start_time=5.0,
-                         frequency=0.015)
+                         frequency=0.03)
 
 # initialize the simulation time
 sim_time = SIM.start_time
