@@ -20,7 +20,7 @@ diff_pres_sigma = 0.002 * 1000  # standard deviation of diff pressure sensor in 
 
 # -------- Magnetometer --------
 mag_beta = np.radians(1.0)
-mag_sigma = np.radians(0.03)
+mag_sigma = np.radians(0.3)   # 0.03 is the initial value, don't know why.
 
 # -------- GPS --------
 ts_gps = 1.0
