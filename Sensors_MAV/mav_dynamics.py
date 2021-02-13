@@ -161,8 +161,8 @@ class MavDynamics:
                                             + ((self._Va * np.sin(psi) + self._wind[1]) ** 2)) +
                                     np.random.normal(loc=0, scale=SENSOR.gps_Vg_sigma)).item()
             self._sensors.gps_course = \
-                (np.arctan2(self._Va * np.sin(psi) + self._wind[1], self._Va * np.cos(psi) + self._wind[0]) + \
-                np.random.normal(loc=0, scale=SENSOR.gps_course_sigma)).item()
+                (np.arctan2(self._Va * np.sin(psi) + self._wind[1], self._Va * np.cos(psi) + self._wind[0]) +
+                 np.random.normal(loc=0, scale=SENSOR.gps_course_sigma)).item()
             self._t_gps = 0.
         else:
             self._t_gps += self._ts_simulation
