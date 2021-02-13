@@ -5,6 +5,7 @@ mavsim_python
         2/2/2019 - RWB
 """
 import sys
+
 sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
@@ -23,6 +24,7 @@ mav_view = MavViewer()  # initialize the mav viewer
 data_view = DataViewer()  # initialize view of data plots
 if VIDEO is True:
     from Coordinate_Frames.video_writer import VideoWriter
+
     video = VideoWriter(video_name="chap5_video.avi",
                         bounding_box=(0, 0, 1000, 1000),
                         output_rate=SIM.ts_video)
@@ -40,7 +42,7 @@ trim_state, trim_input = compute_trim(mav, Va, gamma, Radius)
 # print("trim states: \r\n", trim_state)
 # print("trim input: a e r t \r\n", trim_input)
 
-mav._state = trim_state  # set the initial state of the mav to the trim state
+mav.external_set_state(trim_state)  # set the initial state of the mav to the trim state
 mav._update_velocity_data()  # update Va, alpha, beta to match the new state above.
 delta = trim_input  # set input to constant constant trim input
 
@@ -60,7 +62,7 @@ print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
 
     # -------physical system-------------
-    #current_wind = wind.update()  # get the new wind vector
+    # current_wind = wind.update()  # get the new wind vector
     current_wind = np.zeros((6, 1))
     # this input excites the phugoid mode by adding an impulse at t=5.0
     # delta[0][0] += input_signal.impulse(sim_time)
@@ -81,7 +83,3 @@ while sim_time < SIM.end_time:
 
 if VIDEO is True:
     video.close()
-
-
-
-
