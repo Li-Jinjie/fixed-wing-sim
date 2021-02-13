@@ -135,9 +135,9 @@ class MavDynamics:
         R_mag = euler_2_rotation(0, np.radians(57.5), np.radians(-9.0))
         # magnetic field in inertial frame: unit vector
         mag_inertial = R_mag @ np.array([[1], [0], [0]])
-        R = euler_2_rotation(phi, theta, psi)  # body to inertial
+        R = euler_2_rotation(phi, theta, psi)  # body to inertial, need to inverse.
         # magnetic field in body frame: unit vector
-        mag_body = R @ mag_inertial
+        mag_body = R.T @ mag_inertial
         self._sensors.mag_x = mag_body.item(0) + SENSOR.mag_beta + np.random.normal(loc=0, scale=SENSOR.mag_sigma)
         self._sensors.mag_y = mag_body.item(1) + SENSOR.mag_beta + np.random.normal(loc=0, scale=SENSOR.mag_sigma)
         self._sensors.mag_z = mag_body.item(2) + SENSOR.mag_beta + np.random.normal(loc=0, scale=SENSOR.mag_sigma)

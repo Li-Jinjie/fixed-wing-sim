@@ -60,8 +60,12 @@ class SensorViewer:
                                        labels={'left': 'gps_course (deg)', 'bottom': 'Time (s)'},
                                        rad2deg=True,
                                        time_window=time_window_length)
+        mag_psi = PlotboxArgs(plots=['mag_psi'],
+                                       labels={'left': 'mag_psi (deg)', 'bottom': 'Time (s)'},
+                                       rad2deg=True,
+                                       time_window=time_window_length)
 
-        fourth_row = [gps_Vg_plots, gps_course_plots]
+        fourth_row = [gps_Vg_plots, gps_course_plots, mag_psi]
         plots = [first_row,
                  second_row,
                  third_row,
@@ -75,7 +79,7 @@ class SensorViewer:
                                                      'accel_x', 'accel_y', 'accel_z',
                                                      'diff_pressure',
                                                      'gps_n', 'gps_e', 'gps_h',
-                                                     'gps_Vg', 'gps_course'])
+                                                     'gps_Vg', 'gps_course', 'mag_psi'])
         # plot timer
         self.time = 0.
 
@@ -86,7 +90,7 @@ class SensorViewer:
                        sensors.abs_pressure, sensors.accel_x, sensors.accel_y,
                        sensors.accel_z, sensors.diff_pressure, sensors.gps_n,
                        sensors.gps_e, sensors.gps_h, sensors.gps_Vg,
-                       sensors.gps_course]
+                       sensors.gps_course, -np.arctan2(sensors.mag_y, sensors.mag_x)]
         self.plotter.add_vector_measurement('sensors', sensor_list, self.time)
 
         # Update and display the plot
