@@ -16,8 +16,8 @@ from Kinematics_and_Dynamics.data_viewer import DataViewer
 from Forces_and_Moments.wind_simulation import WindSimulation
 from Autopilot.autopilot import Autopilot
 from Sensors_MAV.mav_dynamics import MavDynamics
-# from State_Estimation.observer import Observer
-from State_Estimation.observer_full import Observer
+from State_Estimation.observer import Observer
+# from State_Estimation.observer_full import Observer
 from tools.signals import Signals
 
 # initialize the visualization
@@ -70,9 +70,11 @@ while sim_time < SIM.end_time:
     measurements = mav.sensors()  # get sensor measurements
     estimated_state = observer.update(measurements)  # estimate states from measurements
     delta, commanded_state = autopilot.update(commands, estimated_state)
+    # delta, commanded_state = autopilot.update(commands, mav.true_state)
 
     # -------physical system-------------
-    current_wind = wind.update()  # get the new wind vector
+    # current_wind = wind.update()  # get the new wind vector
+    current_wind = np.zeros([6, 1])  # no wind, for testing
     mav.update(delta, current_wind)  # propagate the MAV dynamics
 
     # -------update viewer-------------

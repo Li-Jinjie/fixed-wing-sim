@@ -165,7 +165,13 @@ class EkfAttitude:
 class EkfPosition:
     # implement continous-discrete EKF to estimate pn, pe, Vg, chi, wn, we, psi
     def __init__(self):
-        self.Q = 1e-10 * np.eye(7)
+        self.Q = np.diag([1e-10,
+                          1e-10,
+                          1e-1,
+                          1e-5,
+                          5e-1,
+                          5e-2,
+                          1e-1])
         self.R_gps = np.array([[SENSOR.gps_n_sigma ** 2, 0., 0., 0.],
                                [0., SENSOR.gps_e_sigma ** 2, 0., 0.],
                                [0., 0., SENSOR.gps_Vg_sigma ** 2, 0.],
@@ -209,9 +215,9 @@ class EkfPosition:
         psi = x.item(6)
         psidot = state.q * np.sin(state.phi) / np.cos(state.theta) + state.r * np.cos(state.phi) / np.cos(state.theta)
         # refer to page 75 of uav_book supplement
-        # Vgdot = state.Va * psidot * (we * np.cos(psi) - wn * np.sin(psi)) / Vg
-        Vgdot = ((state.Va * np.cos(psi) + wn) * (-state.Va * psidot * np.sin(psi)) +
-                 (state.Va * np.sin(psi) + we) * (state.Va * psidot * np.cos(psi))) / Vg
+        Vgdot = state.Va * psidot * (we * np.cos(psi) - wn * np.sin(psi)) / Vg
+        # Vgdot = ((state.Va * np.cos(psi) + wn) * (-state.Va * psidot * np.sin(psi)) +
+        #          (state.Va * np.sin(psi) + we) * (state.Va * psidot * np.cos(psi))) / Vg  # Original version
         f_ = np.array([[Vg * np.cos(chi)],
                        [Vg * np.sin(chi)],
                        [Vgdot],
