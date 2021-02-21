@@ -31,8 +31,8 @@ class Observer:
         self.lpf_accel_y = AlphaFilter(alpha=0.5)
         self.lpf_accel_z = AlphaFilter(alpha=0.5)
         # use alpha filters to low pass filter absolute and differential pressure
-        self.lpf_abs = AlphaFilter(alpha=0.9, y0=-MAV.rho * MAV.gravity * MAV.down0)
-        self.lpf_diff = AlphaFilter(alpha=0.5, y0=(MAV.rho * MAV.Va0 ** 2.) / 2.)
+        self.lpf_abs = AlphaFilter(alpha=0.9, y0=MAV.rho * MAV.gravity * -MAV.down0)
+        self.lpf_diff = AlphaFilter(alpha=0.5, y0=(MAV.rho * (MAV.Va0 ** 2.)) / 2.)
         # ekf for phi and theta
         self.attitude_ekf = EkfAttitude()
         # ekf for pn, pe, Vg, chi, wn, we, psi
@@ -56,7 +56,7 @@ class Observer:
 
         # not estimating these
         self.estimated_state.alpha = self.estimated_state.theta
-        self.estimated_state.beta = 0.0
+        self.estimated_state.beta = 0.0  # TODO
         self.estimated_state.bx = 0.0
         self.estimated_state.by = 0.0
         self.estimated_state.bz = 0.0
@@ -83,7 +83,7 @@ class EkfAttitude:
         self.Q = 1e-10 * np.eye(2)  # represent modelling error
         self.Q_gyro = np.array([[SENSOR.gyro_sigma ** 2, 0., 0.],
                                 [0., SENSOR.gyro_sigma ** 2, 0.],
-                                [0., 0., SENSOR.gyro_sigma ** 2]])  # ?
+                                [0., 0., SENSOR.gyro_sigma ** 2]])
         self.R_accel = np.array([[SENSOR.accel_sigma ** 2, 0., 0.],
                                  [0., SENSOR.accel_sigma ** 2, 0.],
                                  [0., 0., SENSOR.accel_sigma ** 2]])
@@ -92,7 +92,7 @@ class EkfAttitude:
                               [MAV.theta0]])  # initial state: phi, theta
         self.P = np.eye(2)  # Covariance of the estimation error
         self.Tp = SIM.ts_control / self.N
-        self.gate_threshold = 0.01 # 99% stats.chi2.isf()
+        self.gate_threshold = stats.chi2.isf(q=0.01, df=3)  # 99% measurement equations are 3-dimension
 
     def update(self, measurement, state):
         self.propagate_model(measurement, state)
@@ -135,7 +135,7 @@ class EkfAttitude:
         for i in range(0, self.N):
             # propagate model
             Tp = self.Tp
-            self.xhat = self.xhat + Tp * self.f(self.xhat, state)
+            self.xhat = self.xhat + Tp * self.f(self.xhat, measurement, state)
             # compute Jacobian
             A = jacobian(self.f, self.xhat, measurement, state)
             # compute G matrix for gyro noise
@@ -154,9 +154,9 @@ class EkfAttitude:
         C = jacobian(self.h, self.xhat, measurement, state)
         y = np.array([[measurement.accel_x, measurement.accel_y, measurement.accel_z]]).T
         S_inv = np.linalg.inv(self.R_accel + C @ self.P @ C.T)
-        if stats.chi2.sf((y - h).T @ S_inv @ (y - h), df=3) > self.gate_threshold: # refer to page 74, 8.8 in uav_book supplement
+        if ((y - h).T @ S_inv @ (y - h)) < self.gate_threshold:  # refer to page 74, 8.8 in uav_book supplement
             L = self.P @ C.T @ S_inv
-            tmp = np.eye(L.shape[0]) - L @ C
+            tmp = np.eye(C.shape[0]) - L @ C
             self.P = tmp @ self.P @ tmp.T + L @ self.R_accel @ L.T
             self.xhat = self.xhat + L @ (y - h)
             # print('updating')
