@@ -25,8 +25,8 @@ class Observer:
         self.estimated_state = MsgState()
         # use alpha filters to low pass filter gyros and accels
         self.lpf_gyro_x = AlphaFilter(alpha=0.5)
-        self.lpf_gyro_y = AlphaFilter(alpha=0.5)
-        self.lpf_gyro_z = AlphaFilter(alpha=0.5)
+        self.lpf_gyro_y = AlphaFilter(alpha=0.2)
+        self.lpf_gyro_z = AlphaFilter(alpha=0.8)
         self.lpf_accel_x = AlphaFilter(alpha=0.5)
         self.lpf_accel_y = AlphaFilter(alpha=0.5)
         self.lpf_accel_z = AlphaFilter(alpha=0.5)
@@ -56,7 +56,7 @@ class Observer:
 
         # not estimating these
         self.estimated_state.alpha = self.estimated_state.theta
-        self.estimated_state.beta = 0.0  # TODO
+        self.estimated_state.beta = 0.0
         self.estimated_state.bx = 0.0
         self.estimated_state.by = 0.0
         self.estimated_state.bz = 0.0
@@ -90,9 +90,9 @@ class EkfAttitude:
         self.N = 4  # number of prediction step per sample
         self.xhat = np.array([[MAV.phi0],
                               [MAV.theta0]])  # initial state: phi, theta
-        self.P = np.eye(2)  # Covariance of the estimation error
-        self.Tp = SIM.ts_control / self.N
-        self.gate_threshold = stats.chi2.isf(q=0.01, df=3)  # 99% measurement equations are 3-dimension
+        self.P = np.eye(2) * 0.1  # Covariance of the estimation error
+        self.Tp = (SIM.ts_control / self.N)
+        self.gate_threshold = stats.chi2.isf(q=0.01, df=3)  # 99%; measurement equations are 3-dimension
 
     def update(self, measurement, state):
         self.propagate_model(measurement, state)
@@ -156,7 +156,7 @@ class EkfAttitude:
         S_inv = np.linalg.inv(self.R_accel + C @ self.P @ C.T)
         if ((y - h).T @ S_inv @ (y - h)) < self.gate_threshold:  # refer to page 74, 8.8 in uav_book supplement
             L = self.P @ C.T @ S_inv
-            tmp = np.eye(C.shape[0]) - L @ C
+            tmp = np.eye(L.shape[0]) - L @ C
             self.P = tmp @ self.P @ tmp.T + L @ self.R_accel @ L.T
             self.xhat = self.xhat + L @ (y - h)
             # print('updating')
@@ -165,19 +165,28 @@ class EkfAttitude:
 class EkfPosition:
     # implement continous-discrete EKF to estimate pn, pe, Vg, chi, wn, we, psi
     def __init__(self):
-        self.Q =
-        self.R_gps =
-        self.R_pseudo =
-        self.N =  # number of prediction step per sample
-        self.Ts = (SIM.ts_control / self.N)
-        self.xhat =
-        self.P =
+        self.Q = 1e-10 * np.eye(7)
+        self.R_gps = np.array([[SENSOR.gps_n_sigma ** 2, 0., 0., 0.],
+                               [0., SENSOR.gps_e_sigma ** 2, 0., 0.],
+                               [0., 0., SENSOR.gps_Vg_sigma ** 2, 0.],
+                               [0., 0., 0., SENSOR.gps_course_sigma ** 2]])  # n, e, Vg, chi
+        self.R_pseudo = np.diag([0.01, 0.01])  #
+        self.N = 4  # number of prediction step per sample
+        self.Tp = (SIM.ts_control / self.N)
+        self.xhat = np.array([[MAV.north0],
+                              [MAV.east0],
+                              [MAV.Va0],
+                              [0.],
+                              [0.],
+                              [0.],
+                              [0.]])
+        self.P = np.eye(7) * 0.1
         self.gps_n_old = 9999
         self.gps_e_old = 9999
         self.gps_Vg_old = 9999
         self.gps_course_old = 9999
-        self.pseudo_threshold = stats.chi2.isf()
-        self.gps_threshold = 100000  # don't gate GPS
+        self.pseudo_threshold = stats.chi2.isf(q=0.01, df=2)
+        self.gps_threshold = np.inf  # don't gate GPS
 
     def update(self, measurement, state):
         self.propagate_model(measurement, state)
@@ -192,55 +201,73 @@ class EkfPosition:
 
     def f(self, x, measurement, state):
         # system dynamics for propagation model: xdot = f(x, u)
-        Vg =
-        chi =
-        psi =
-        psidot =
-        Vgdot =
-        f_ =
+        # refer to page 159 of uav_book
+        Vg = x.item(2)
+        chi = x.item(3)
+        wn = x.item(4)
+        we = x.item(5)
+        psi = x.item(6)
+        psidot = state.q * np.sin(state.phi) / np.cos(state.theta) + state.r * np.cos(state.phi) / np.cos(state.theta)
+        # refer to page 75 of uav_book supplement
+        # Vgdot = state.Va * psidot * (we * np.cos(psi) - wn * np.sin(psi)) / Vg
+        Vgdot = ((state.Va * np.cos(psi) + wn) * (-state.Va * psidot * np.sin(psi)) +
+                 (state.Va * np.sin(psi) + we) * (state.Va * psidot * np.cos(psi))) / Vg
+        f_ = np.array([[Vg * np.cos(chi)],
+                       [Vg * np.sin(chi)],
+                       [Vgdot],
+                       [(MAV.gravity / Vg) * np.tan(state.phi) * np.cos(chi - psi)],
+                       [0],
+                       [0],
+                       [psidot]])
         return f_
 
     def h_gps(self, x, measurement, state):
         # measurement model for gps measurements
-        pn =
-        pe =
-        Vg =
-        chi =
-        h_ =
+        pn = x.item(0)
+        pe = x.item(1)
+        Vg = x.item(2)
+        chi = x.item(3)
+        h_ = np.array([[pn],
+                       [pe],
+                       [Vg],
+                       [chi]])
         return h_
 
     def h_pseudo(self, x, measurement, state):
         # measurement model for wind triangale pseudo measurement
-        Vg =
-        chi =
-        wn =
-        we =
-        psi =
-        h_ =
+        Vg = x.item(2)
+        chi = x.item(3)
+        wn = x.item(4)
+        we = x.item(5)
+        psi = x.item(6)
+        h_ = np.array([[state.Va * np.cos(psi) + wn - Vg * np.cos(chi)],
+                       [state.Va * np.sin(psi) + we - Vg * np.sin(chi)]])
         return h_
 
     def propagate_model(self, measurement, state):
         # model propagation
         for i in range(0, self.N):
             # propagate model
-            self.xhat =
+            Tp = self.Tp
+            self.xhat = self.xhat + Tp * self.f(self.xhat, measurement, state)
             # compute Jacobian
-            A =  # jacobian()
+            A = jacobian(self.f, self.xhat, measurement, state)
             # convert to discrete time models
-            A_d =
+            A_d = np.eye(A.shape[0]) + A * Tp + A @ A * (Tp ** 2)
             # update P with discrete time model
-            self.P =
+            self.P = A_d @ self.P @ A_d.T + (Tp ** 2) * self.Q
 
     def measurement_update(self, measurement, state):
         # always update based on wind triangle pseudu measurement
         h = self.h_pseudo(self.xhat, measurement, state)
         C = jacobian(self.h_pseudo, self.xhat, measurement, state)
         y = np.array([[0, 0]]).T
-        S_inv =
+        S_inv = np.linalg.inv(self.R_pseudo + C @ self.P @ C.T)
         if (y - h).T @ S_inv @ (y - h) < self.pseudo_threshold:
-            L =
-            self.P =
-            self.xhat =
+            L = self.P @ C.T @ S_inv
+            tmp = np.eye(L.shape[0]) - L @ C
+            self.P = tmp @ self.P @ tmp.T + L @ self.R_pseudo @ L.T
+            self.xhat = self.xhat + L @ (y - h)
 
             # only update GPS when one of the signals changes
         if (measurement.gps_n != self.gps_n_old) \
@@ -255,11 +282,12 @@ class EkfPosition:
                            measurement.gps_e,
                            measurement.gps_Vg,
                            y_chi]]).T
-            S_inv =
+            S_inv = np.linalg.inv(self.R_gps + C @ self.P @ C.T)
             if (y - h).T @ S_inv @ (y - h) < self.gps_threshold:
-                L =
-                self.xhat =
-                self.P =
+                L = self.P @ C.T @ S_inv
+                tmp = np.eye(L.shape[0]) - L @ C
+                self.P = tmp @ self.P @ tmp.T + L @ self.R_gps @ L.T
+                self.xhat = self.xhat + L @ (y - h)
 
                 # update stored GPS signals
             self.gps_n_old = measurement.gps_n
