@@ -6,17 +6,18 @@ mavsim_python
         2/24/2020 - RWB
 """
 import sys
+
 sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
 
-from chap2.mav_viewer import MavViewer
-from chap3.data_viewer import DataViewer
-from chap4.wind_simulation import WindSimulation
-from chap6.autopilot import Autopilot
-from chap7.mav_dynamics import MavDynamics
-from chap8.observer import Observer
-#from chap8.observer_full import Observer
+from Coordinate_Frames.mav_viewer import MavViewer
+from Kinematics_and_Dynamics.data_viewer import DataViewer
+from Forces_and_Moments.wind_simulation import WindSimulation
+from Autopilot.autopilot import Autopilot
+from Sensors_MAV.mav_dynamics import MavDynamics
+# from State_Estimation.observer import Observer
+from State_Estimation.observer_full import Observer
 from tools.signals import Signals
 
 # initialize the visualization
@@ -24,7 +25,8 @@ VIDEO = False  # True==write video, False==don't write video
 mav_view = MavViewer()  # initialize the mav viewer
 data_view = DataViewer()  # initialize view of data plots
 if VIDEO is True:
-    from chap2.video_writer import VideoWriter
+    from Coordinate_Frames.video_writer import VideoWriter
+
     video = VideoWriter(video_name="chap8_video.avi",
                         bounding_box=(0, 0, 1000, 1000),
                         output_rate=SIM.ts_video)
@@ -37,11 +39,12 @@ observer = Observer(SIM.ts_simulation)
 
 # autopilot commands
 from message_types.msg_autopilot import MsgAutopilot
+
 commands = MsgAutopilot()
 Va_command = Signals(dc_offset=25.0,
                      amplitude=3.0,
                      start_time=2.0,
-                     frequency = 0.01)
+                     frequency=0.01)
 h_command = Signals(dc_offset=100.0,
                     amplitude=10.0,
                     start_time=0.0,
@@ -87,7 +90,3 @@ while sim_time < SIM.end_time:
 
 if VIDEO is True:
     video.close()
-
-
-
-
