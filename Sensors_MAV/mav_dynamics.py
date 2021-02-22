@@ -145,7 +145,7 @@ class MavDynamics:
         # simulate pressure sensors
         self._sensors.abs_pressure = MAV.rho * MAV.gravity * (h - 0) + \
                                      np.random.normal(loc=0, scale=SENSOR.abs_pres_sigma)
-        self._sensors.diff_pressure = MAV.rho * (self._Va ** 2) / 2 + \
+        self._sensors.diff_pressure = MAV.rho * (self._Va ** 2.) / 2. + \
                                       np.random.normal(loc=0, scale=SENSOR.diff_pres_sigma)
         # simulate GPS sensor
         if self._t_gps >= SENSOR.ts_gps:
@@ -255,7 +255,7 @@ class MavDynamics:
             self._alpha = np.pi / 2  # check this line
         else:
             self._alpha = np.arctan2(w_r, u_r)
-            # compute sideslip angle
+        # compute sideslip angle
         if self._Va == 0:
             self._beta = 0  # check this line
         else:

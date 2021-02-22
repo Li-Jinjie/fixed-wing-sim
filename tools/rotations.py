@@ -49,7 +49,7 @@ def euler_2_quaternion(phi, theta, psi):
 
 def euler_2_rotation(phi, theta, psi):
     """
-    Converts euler angles to rotation matrix (R_b^i, i.e., body to inertial)
+    Converts euler angles to rotation matrix (R^i_b, i.e., body to inertial)
     """
     # only call sin and cos once for each angle to speed up rendering
     c_phi = np.cos(phi)

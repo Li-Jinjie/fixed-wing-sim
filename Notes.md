@@ -55,4 +55,35 @@
    1. 首先在程序里error的定义是y_ref-y，这样实际上就已经是负反馈了，y过大了是负的，所以在控制类里不用加负号。
    2. 其次，程序里出现了一种PdControlWithRate。这里说白了就是用真实的y的导数替代我们用Z变换得到的error_dot量。由于y_ref的导数为0，所以error = y_ref - y的导数就变为了 - y_dot
 4. Yaw Damper using the Rudder 是补充材料里的新内容。对于小型飞机，如果侧滑角无法测量，则书中p105的公式需要替换成补充材料中的内容，用Yaw Damper的方式控制侧滑角为0。
-5. autopilot的顺序：首先通过
+5. autopilot：串级PID调参很麻烦。以后有时间试试能量法或者LQR控制。
+6. 看看能不能训练一个**强化学习**网络控制
+
+### Chapter 8
+
+![image-20210221162159594](Notes.assets/image-20210221162159594.png)
+
+1. 对于EKF，要搞清每个矩阵的含义。解释一下propagate_model里的含义:
+
+P阵定义为误差的协方差
+$$
+P(t) \triangleq E\left\{\tilde{x}(t) \tilde{x}(t)^{\top}\right\}
+$$
+进而
+$$
+\dot{\tilde{x}}=A \tilde{x}+\xi=A \tilde{x}+G\eta_s+\eta_i
+$$
+其中第一个eta是由于传感器的误差造成的误差项，第二个eta是建模等不可知因素造成的误差项。又因为如下公式：
+$$
+E\left[\left(G \eta_{s}+\eta_{i}\right)\left(G \eta_{s}+\eta_{i}\right)^{\top}\right]=G Q_{s} G^{\top}+Q_{d}
+$$
+所以，第9行的公式修改为：
+$$
+P=A_dPA_d^T+T_p^2(G Q_{gyro} G^{\top}+Q)
+$$
+
+2. Q值确实会较大影响估计的效果。
+   $$
+   E\{\xi(t)\xi(\tau)\}=Q\delta(t,\tau)
+   $$
+   Q表示建模的误差，确实得调整。具体咋调感觉还得实际做的搞一下，仿真还是不行。
+
