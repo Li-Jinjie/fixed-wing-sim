@@ -87,3 +87,16 @@ $$
    $$
    Q表示建模的误差，确实得调整。具体咋调感觉还得实际做的搞一下，仿真还是不行。
 
+### Chapter 10
+
+- 这一章对风的考虑只有wn和we。以后有空了可以看看怎么把wd也作为状态。
+
+- 如果用估计的状态，振荡非常严重。这里估计是state_estimation那里没调好，之后需要调整一下。
+
+- 在这一章中作者用了math里的sin, cos和atan2. 根据网址：https://stackoverflow.com/questions/30712402/python-what-is-the-difference-between-math-exp-and-numpy-exp-and-why-do-numpy-c 
+
+  > The numpy version is ~9x faster (and probably can be made faster still by a careful choice of optimized math libraries)
+  >
+  > As @camz states below - the `math` version will be faster when working on single values (in a quick test, ~7.5x faster). 
+
+  因此，计算标量时用math，计算数组时用numpy。

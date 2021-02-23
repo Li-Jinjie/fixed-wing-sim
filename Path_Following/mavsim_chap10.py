@@ -6,6 +6,7 @@ mavsim_python
         2/27/2020 - RWB
 """
 import sys
+
 sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
@@ -24,6 +25,7 @@ path_view = PathViewer()  # initialize the viewer
 data_view = DataViewer()  # initialize view of data plots
 if VIDEO is True:
     from Coordinate_Frames.video_writer import VideoWriter
+
     video = VideoWriter(video_name="chap10_video.avi",
                         bounding_box=(0, 0, 1000, 1000),
                         output_rate=SIM.ts_video)
@@ -37,12 +39,13 @@ path_follower = PathFollower()
 
 # path definition
 from message_types.msg_path import MsgPath
+
 path = MsgPath()
-#path.type = 'line'
+# path.type = 'line'
 path.type = 'orbit'
 if path.type == 'line':
     path.line_origin = np.array([[0.0, 0.0, -100.0]]).T
-    path.line_direction = np.array([[0.5, 1.0, 0.0]]).T
+    path.line_direction = np.array([[0.5, 1.0, -0.1]]).T
     path.line_direction = path.line_direction / np.linalg.norm(path.line_direction)
 elif path.type == 'orbit':
     path.orbit_center = np.array([[0.0, 0.0, -100.0]]).T  # center of the orbit
@@ -61,14 +64,16 @@ while sim_time < SIM.end_time:
     estimated_state = observer.update(measurements)  # estimate states from measurements
 
     # -------path follower-------------
-    autopilot_commands = path_follower.update(path, estimated_state)
-    #autopilot_commands = path_follower.update(path, mav.true_state)  # for debugging
+    # autopilot_commands = path_follower.update(path, estimated_state)
+    autopilot_commands = path_follower.update(path, mav.true_state)  # for debugging
 
     # -------autopilot-------------
-    delta, commanded_state = autopilot.update(autopilot_commands, estimated_state)
+    # delta, commanded_state = autopilot.update(autopilot_commands, estimated_state)
+    delta, commanded_state = autopilot.update(autopilot_commands, mav.true_state)  # for debugging
 
     # -------physical system-------------
     current_wind = wind.update()  # get the new wind vector
+    # current_wind = np.zeros([6, 1])   # for debugging
     mav.update(delta, current_wind)  # propagate the MAV dynamics
 
     # -------update viewer-------------
@@ -90,7 +95,3 @@ while sim_time < SIM.end_time:
 
 if VIDEO is True:
     video.close()
-
-
-
-
