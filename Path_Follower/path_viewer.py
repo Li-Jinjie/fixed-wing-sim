@@ -12,7 +12,7 @@ import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from Coordinate_Frames.draw_mav import DrawMav
-from Path_Following.draw_path import DrawPath
+from Path_Follower.draw_path import DrawPath
 
 
 class PathViewer:

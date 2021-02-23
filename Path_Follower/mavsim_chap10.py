@@ -16,8 +16,8 @@ from Forces_and_Moments.wind_simulation import WindSimulation
 from Autopilot.autopilot import Autopilot
 from Sensors_MAV.mav_dynamics import MavDynamics
 from State_Estimation.observer import Observer
-from Path_Following.path_follower import PathFollower
-from Path_Following.path_viewer import PathViewer
+from Path_Follower.path_follower import PathFollower
+from Path_Follower.path_viewer import PathViewer
 
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
