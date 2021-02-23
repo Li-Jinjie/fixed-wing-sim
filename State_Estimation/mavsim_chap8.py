@@ -73,8 +73,8 @@ while sim_time < SIM.end_time:
     # delta, commanded_state = autopilot.update(commands, mav.true_state)
 
     # -------physical system-------------
-    # current_wind = wind.update()  # get the new wind vector
-    current_wind = np.zeros([6, 1])  # no wind, for testing
+    current_wind = wind.update()  # get the new wind vector
+    # current_wind = np.zeros([6, 1])  # no wind, for testing
     mav.update(delta, current_wind)  # propagate the MAV dynamics
 
     # -------update viewer-------------
