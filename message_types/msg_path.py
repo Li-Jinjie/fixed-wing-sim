@@ -8,15 +8,16 @@ part of mavsim_python
         3/11/2019 - RWB
 """
 import numpy as np
+import Linear_Design_Models.model_coef as TF
 
 
 class MsgPath:
     def __init__(self):
         # type='line' means straight line following, type='orbit' means orbit following
         self.type = 'line'
-        #self.type = 'orbit'
+        # self.type = 'orbit'
         # desired airspeed along the path
-        self.airspeed = 25
+        self.airspeed = TF.Va_trim
         # origin of the straight path line (r)
         self.line_origin = np.array([[0.0, 0.0, 0.0]]).T
         # direction of line -unit vector- (q)
