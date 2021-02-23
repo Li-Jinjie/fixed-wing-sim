@@ -16,8 +16,8 @@ import numpy as np
 
 # --------steady state wind defined in the inertial frame--------
 # n, e, d; m/s
-w_ns = 1
-w_es = 1
+w_ns = 3
+w_es = -3
 w_ds = 0
 
 # ---------Dryden gust model parameters-------
