@@ -78,11 +78,11 @@ class PathFollower:
         # distance from orbit center
         d = np.sqrt((pn - cn) ** 2 + (pe - ce) ** 2)
         # compute wrapped version of angular position on orbit
-        varphi = wrap(np.arctan2(pe - ce, pn - cn), state.chi)
+        phi_var = wrap(np.arctan2(pe - ce, pn - cn), state.chi)
         # compute normalized orbit error
         orbit_error = (d - path.orbit_radius) / path.orbit_radius
         # course command
-        self.autopilot_commands.course_command = varphi + \
+        self.autopilot_commands.course_command = phi_var + \
                                                  direction * (np.pi / 2. + np.arctan(self.k_orbit * orbit_error))
         # altitude command
         self.autopilot_commands.altitude_command = -cd
