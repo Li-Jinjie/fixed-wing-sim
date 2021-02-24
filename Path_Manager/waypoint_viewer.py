@@ -5,13 +5,14 @@ mavsim_python: waypoint viewer (for chapter 11)
         4/15/2019 - BGM
 """
 import sys
+
 sys.path.append("..")
 import numpy as np
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-from chap2.draw_mav import DrawMav
-from chap10.draw_path import DrawPath
-from chap11.draw_waypoints import DrawWaypoints
+from Coordinate_Frames.draw_mav import DrawMav
+from Path_Follower.draw_path import DrawPath
+from Path_Manager.draw_waypoints import DrawWaypoints
 
 
 class WaypointViewer:
@@ -22,9 +23,11 @@ class WaypointViewer:
         self.window = gl.GLViewWidget()  # initialize the view object
         self.window.setWindowTitle('World Viewer')
         self.window.setGeometry(0, 0, 1500, 1500)  # args: upper_left_x, upper_right_y, width, height
-        grid = gl.GLGridItem() # make a grid to represent the ground
-        grid.scale(self.scale/20, self.scale/20, self.scale/20) # set the size of the grid (distance between each line)
-        self.window.addItem(grid) # add grid to viewer
+        grid = gl.GLGridItem()  # make a grid to represent the ground
+        grid.scale(self.scale / 20,
+                   self.scale / 20,
+                   self.scale / 20)  # set the size of the grid (distance between each line)
+        self.window.addItem(grid)  # add grid to viewer
         self.window.setCameraPosition(distance=self.scale, elevation=50, azimuth=-90)
         self.window.setBackgroundColor('k')  # set background color to black
         self.window.show()  # display configured window
@@ -35,7 +38,7 @@ class WaypointViewer:
         self.waypoint_plot = []
 
     def update(self, state, path, waypoints):
-        blue = np.array([[30, 144, 255, 255]])/255.
+        blue = np.array([[30, 144, 255, 255]]) / 255.
         red = np.array([[1., 0., 0., 1]])
         # initialize the drawing the first time update() is called
         if not self.plot_initialized:

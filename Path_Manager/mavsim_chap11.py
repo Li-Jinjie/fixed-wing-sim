@@ -6,6 +6,7 @@ mavsim_python
         2/27/2020 - RWB
 """
 import sys
+
 sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
@@ -26,6 +27,7 @@ waypoint_view = WaypointViewer()  # initialize the viewer
 data_view = DataViewer()  # initialize view of data plots
 if VIDEO is True:
     from Coordinate_Frames.video_writer import VideoWriter
+
     video = VideoWriter(video_name="chap11_video.avi",
                         bounding_box=(0, 0, 1000, 1000),
                         output_rate=SIM.ts_video)
@@ -40,16 +42,16 @@ path_manager = PathManager()
 
 # waypoint definition
 from message_types.msg_waypoints import MsgWaypoints
+
 waypoints = MsgWaypoints()
-waypoints.type = 'straight_line'
-#waypoints.type = 'fillet'
-#waypoints.type = 'dubins'
+# waypoints.type = 'straight_line'
+waypoints.type = 'fillet'
+# waypoints.type = 'dubins'
 Va = PLAN.Va0
 waypoints.add(np.array([[0, 0, -100]]).T, Va, np.radians(0), np.inf, 0, 0)
 waypoints.add(np.array([[1000, 0, -100]]).T, Va, np.radians(45), np.inf, 0, 0)
 waypoints.add(np.array([[0, 1000, -100]]).T, Va, np.radians(45), np.inf, 0, 0)
 waypoints.add(np.array([[1000, 1000, -100]]).T, Va, np.radians(-135), np.inf, 0, 0)
-
 
 # initialize the simulation time
 sim_time = SIM.start_time
@@ -60,7 +62,8 @@ print("Press Command-Q to exit...")
 while sim_time < SIM.end_time:
     # -------observer-------------
     measurements = mav.sensors()  # get sensor measurements
-    estimated_state = observer.update(measurements)  # estimate states from measurements
+    # estimated_state = observer.update(measurements)  # estimate states from measurements
+    estimated_state = mav.true_state  # for debugging
 
     # -------path manager-------------
     path = path_manager.update(waypoints, PLAN.R_min, estimated_state)
@@ -94,7 +97,3 @@ while sim_time < SIM.end_time:
 
 if VIDEO is True:
     video.close()
-
-
-
-
