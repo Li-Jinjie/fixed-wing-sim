@@ -63,7 +63,7 @@ class PathManager:
         if waypoints.flag_waypoints_changed is True:
             self.initialize_pointers()
             self.construct_line(waypoints)
-            waypoints.flag_waypoints_changed = False  # Must be the last line !!!! read the notes.md .
+            waypoints.flag_waypoints_changed = False
 
         # state machine for line path
         if self.inHalfSpace(mav_pos) is True:
@@ -71,23 +71,23 @@ class PathManager:
             self.construct_line(waypoints)
 
     def construct_line(self, waypoints):
-        previous = waypoints.ned[:, self.ptr_previous:self.ptr_previous + 1]
+        w_previous = waypoints.ned[:, self.ptr_previous:self.ptr_previous + 1]
         if self.ptr_current == 9999:
-            current = None  # TODO: fix this
+            w_current = None  # TODO: fix this
         else:
-            current = waypoints.ned[:, self.ptr_current:self.ptr_current + 1]
+            w_current = waypoints.ned[:, self.ptr_current:self.ptr_current + 1]
         if self.ptr_next == 9999:
-            next = None  # TODO: fix this
+            w_next = None  # TODO: fix this
         else:
-            next = waypoints.ned[:, self.ptr_next:self.ptr_next + 1]
+            w_next = waypoints.ned[:, self.ptr_next:self.ptr_next + 1]
         # update path variables
-        self.halfspace_r = current
-        q_previous = (current - previous) / np.linalg.norm(current - previous)
-        q_current = (next - current) / np.linalg.norm(next - current)
+        self.halfspace_r = w_current
+        q_previous = (w_current - w_previous) / np.linalg.norm(w_current - w_previous)
+        q_current = (w_next - w_current) / np.linalg.norm(w_next - w_current)
         self.halfspace_n = (q_previous + q_current) / np.linalg.norm(q_previous + q_current)
 
         self.path.type = 'line'
-        self.path.line_origin = previous
+        self.path.line_origin = w_previous
         self.path.line_direction = q_previous
 
     # def fillet_manager(self, waypoints, radius, state):
