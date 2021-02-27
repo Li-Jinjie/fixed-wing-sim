@@ -2,7 +2,7 @@ import numpy as np
 import sys
 
 sys.path.append('..')
-# from Path_Manager.dubins_parameters import DubinsParameters
+from Path_Manager.dubins_parameters import DubinsParameters
 from message_types.msg_path import MsgPath
 
 
@@ -20,9 +20,10 @@ class PathManager:
         # state of the manager state machine
         self.manager_state = 1
         self.manager_requests_waypoints = True
-        # self.dubins_path = DubinsParameters()
+        self.dubins_path = DubinsParameters()
 
     def update(self, waypoints, radius, state):
+        self.num_waypoints = waypoints.num_waypoints
         if waypoints.num_waypoints == 0:
             self.manager_requests_waypoints = True
         if self.manager_requests_waypoints is True \
@@ -161,7 +162,7 @@ class PathManager:
         self.path.orbit_radius = radius
         direction = np.sign(q_previous.item(0) * q_current.item(1)
                             - q_previous.item(1) * q_current.item(0))
-        if direction == 1:
+        if direction == +1:
             self.path.orbit_direction = 'CW'
         else:
             self.path.orbit_direction = 'CCW'
@@ -170,21 +171,79 @@ class PathManager:
         self.halfspace_r = w_current + (radius / np.tan(rho_var / 2.)) * q_current
         self.halfspace_n = q_current
 
-#
-# def dubins_manager(self, waypoints, radius, state):
-#     mav_pos = np.array([[state.north, state.east, -state.altitude]]).T
-#     # if the waypoints have changed, update the waypoint pointer
-#
-#     # state machine for dubins path
-#
-# def construct_dubins_circle_start(self, waypoints, dubins_path):
-#     pass
-#     # update path variables
-#
-# def construct_dubins_line(self, waypoints, dubins_path):
-#     pass
-#     # update path variables
-#
-# def construct_dubins_circle_end(self, waypoints, dubins_path):
-#     pass
-#     # update path variables
+    def dubins_manager(self, waypoints, radius, state):
+        mav_pos = np.array([[state.north, state.east, -state.altitude]]).T
+        # if the waypoints have changed, update the waypoint pointer
+        if waypoints.flag_waypoints_changed is True:
+            self.initialize_pointers()
+            self.construct_dubins_circle_start(waypoints, self.dubins_path, radius)
+            self.manager_state = 1
+            waypoints.flag_waypoints_changed = False
+
+        # state machine for dubins path
+        if self.inHalfSpace(mav_pos) is True:
+            if self.manager_state == 1:
+                self.halfspace_r = self.dubins_path.r1
+                self.halfspace_n = self.dubins_path.n1
+                self.manager_state = 2
+            elif self.manager_state == 2:
+                self.construct_dubins_line(waypoints, self.dubins_path)
+                self.manager_state = 3
+            elif self.manager_state == 3:
+                self.construct_dubins_circle_end(waypoints, self.dubins_path)
+                self.manager_state = 4
+            elif self.manager_state == 4:
+                self.halfspace_r = self.dubins_path.r3
+                self.halfspace_n = self.dubins_path.n3
+                self.manager_state = 5
+            elif self.manager_state == 5:
+                self.increment_pointers()
+                self.construct_dubins_circle_start(waypoints, self.dubins_path, radius)
+                self.manager_state = 1
+
+    def construct_dubins_circle_start(self, waypoints, dubins_path, radius):
+        w_previous = waypoints.ned[:, self.ptr_previous:self.ptr_previous + 1]
+        if self.ptr_current == 9999:
+            w_current = None  # TODO: fix this
+        else:
+            w_current = waypoints.ned[:, self.ptr_current:self.ptr_current + 1]
+
+        dubins_path.update(w_previous, waypoints.course.item(self.ptr_previous),
+                           w_current, waypoints.course.item(self.ptr_current), radius)
+
+        # update path variables
+        self.path.type = 'orbit'
+        self.path.orbit_center = dubins_path.center_s
+        self.path.orbit_radius = dubins_path.radius
+        if dubins_path.dir_s == +1:
+            self.path.orbit_direction = 'CW'
+        else:
+            self.path.orbit_direction = 'CCW'
+
+        # update half plane variables
+        self.halfspace_r = dubins_path.r1
+        self.halfspace_n = -dubins_path.n1
+
+    def construct_dubins_line(self, waypoints, dubins_path):
+        # update path variables
+        self.path.type = 'line'
+        self.path.line_origin = dubins_path.r1
+        self.path.line_direction = dubins_path.n1
+
+        # update half plane variables
+        self.halfspace_r = dubins_path.r2
+        self.halfspace_n = dubins_path.n1
+
+    def construct_dubins_circle_end(self, waypoints, dubins_path):
+        # update path variables
+        self.path.type = 'orbit'
+        self.path.orbit_center = dubins_path.center_e
+        self.path.orbit_radius = dubins_path.radius
+        if dubins_path.dir_e == +1:
+            self.path.orbit_direction = 'CW'
+        else:
+            self.path.orbit_direction = 'CCW'
+
+        # update half plane variables
+        self.halfspace_r = dubins_path.r3
+        self.halfspace_n = -dubins_path.n3
