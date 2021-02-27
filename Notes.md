@@ -86,6 +86,8 @@ $$
    E\{\xi(t)\xi(\tau)\}=Q\delta(t,\tau)
    $$
    Q表示建模的误差，确实得调整。具体咋调感觉还得实际做的搞一下，仿真还是不行。
+   
+3. **TODO**： 全状态EKF观测器
 
 ### Chapter 10
 
@@ -100,3 +102,12 @@ $$
   > As @camz states below - the `math` version will be faster when working on single values (in a quick test, ~7.5x faster). 
 
   因此，计算标量时用math，计算数组时用numpy。
+
+- **TODO**：3D vector-field path following
+
+### Chapter 11
+
+- a 是一个二维的array。a[:, 1:2]返回的是一个二维数组，a[:,1]返回的是一个一维数组。
+- is True和==True的区别：对于is True，只有遇到bool值True时才会执行，遇到和True一样的1时也不会执行。
+- **一定要注意变量的作用域。**如果在一段程序中同一个变量被重复赋值，则当这个变量停止作用时，应该用del命令删除！！！！！
+- TODO： 2. 将不同的路径跟踪算法解耦。
