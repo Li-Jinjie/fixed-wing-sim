@@ -5,7 +5,7 @@ sys.path.append('..')
 from Path_Manager.dubins_parameters import DubinsParameters
 from message_types.msg_path import MsgPath
 
-
+# TODO: separate several path manager algorithm into different python files.
 class PathManager:
     def __init__(self):
         # message sent to path follower
@@ -89,6 +89,7 @@ class PathManager:
         self.path.type = 'line'
         self.path.line_origin = w_previous
         self.path.line_direction = q_previous
+        self.path.plot_updated = False
 
         # update half plane variables
         self.halfspace_r = w_current
@@ -134,6 +135,7 @@ class PathManager:
         self.path.type = 'line'
         self.path.line_origin = w_previous
         self.path.line_direction = q_previous
+        self.path.plot_updated = False
 
         # update half plane variables
         self.halfspace_r = z
@@ -167,6 +169,8 @@ class PathManager:
         else:
             self.path.orbit_direction = 'CCW'
 
+        self.path.plot_updated = False
+
         # update half plane variables
         self.halfspace_r = w_current + (radius / np.tan(rho_var / 2.)) * q_current
         self.halfspace_n = q_current
@@ -190,7 +194,7 @@ class PathManager:
                 self.construct_dubins_line(waypoints, self.dubins_path)
                 self.manager_state = 3
             elif self.manager_state == 3:
-                self.construct_dubins_circle_end(waypoints, self.dubins_path)
+                self.construct_dubins_circle_end(waypoints, self.dubins_path, radius)
                 self.manager_state = 4
             elif self.manager_state == 4:
                 self.halfspace_r = self.dubins_path.r3
@@ -208,6 +212,7 @@ class PathManager:
         else:
             w_current = waypoints.ned[:, self.ptr_current:self.ptr_current + 1]
 
+        # find Dubins Parameters
         dubins_path.update(w_previous, waypoints.course.item(self.ptr_previous),
                            w_current, waypoints.course.item(self.ptr_current), radius)
 
@@ -219,6 +224,7 @@ class PathManager:
             self.path.orbit_direction = 'CW'
         else:
             self.path.orbit_direction = 'CCW'
+        self.path.plot_updated = False
 
         # update half plane variables
         self.halfspace_r = dubins_path.r1
@@ -229,12 +235,13 @@ class PathManager:
         self.path.type = 'line'
         self.path.line_origin = dubins_path.r1
         self.path.line_direction = dubins_path.n1
+        self.path.plot_updated = False
 
         # update half plane variables
         self.halfspace_r = dubins_path.r2
         self.halfspace_n = dubins_path.n1
 
-    def construct_dubins_circle_end(self, waypoints, dubins_path):
+    def construct_dubins_circle_end(self, waypoints, dubins_path, radius):
         # update path variables
         self.path.type = 'orbit'
         self.path.orbit_center = dubins_path.center_e
@@ -243,6 +250,7 @@ class PathManager:
             self.path.orbit_direction = 'CW'
         else:
             self.path.orbit_direction = 'CCW'
+        self.path.plot_updated = False
 
         # update half plane variables
         self.halfspace_r = dubins_path.r3

@@ -80,18 +80,19 @@ def compute_parameters(ps, chis, pe, chie, R):
 
         # compute L1
         line = cre - crs
-        theta_var = np.arctan2(line.item(1), line.item(0))
+        theta_var_1 = np.arctan2(line.item(1), line.item(0))
 
-        angle_1 = mod(2. * pi + mod(theta_var - pi / 2.) - mod(chis - pi / 2.))
-        angle_2 = mod(2. * pi + mod(chie - pi / 2.) - mod(theta_var - pi / 2.))
+        angle_1 = mod(2. * pi + mod(theta_var_1 - pi / 2.) - mod(chis - pi / 2.))
+        angle_2 = mod(2. * pi + mod(chie - pi / 2.) - mod(theta_var_1 - pi / 2.))
 
         L1 = np.linalg.norm(crs - cre) + R * angle_1 + R * angle_2
+        del line, theta_var_1, angle_1, angle_2
 
         # compute L2
         line = cle - crs
         ell = np.linalg.norm(line)
-        theta_var = np.arctan2(line.item(1), line.item(0))
-        theta_var_2 = theta_var - pi / 2. + np.arcsin(2. * R / ell)
+        theta_var_1 = np.arctan2(line.item(1), line.item(0))
+        theta_var_2 = theta_var_1 - pi / 2. + np.arcsin(2. * R / ell)
         angle_1 = mod(2. * pi + mod(theta_var_2) - mod(chis - pi / 2.))
         angle_2 = mod(2. * pi + mod(theta_var_2 + pi) - mod(chie + pi / 2.))
         if not np.isreal(angle_2):  # TODO: figure out why. I guess it should be np.inf
@@ -99,26 +100,29 @@ def compute_parameters(ps, chis, pe, chie, R):
             print("angle_2 is not a real numble!")
         else:
             L2 = np.sqrt(ell ** 2 - 4. * (R ** 2)) + R * angle_1 + R * angle_2
+        del line, ell, theta_var_1, theta_var_2, angle_1, angle_2
 
         # compute L3
         line = cre - cls
         ell = np.linalg.norm(line)
-        theta_var = np.arctan2(line.item(1), line.item(0))
+        theta_var_1 = np.arctan2(line.item(1), line.item(0))
         theta_var_2 = np.arccos(2. * R / ell)
-        angle_1 = mod(2. * pi + mod(chis + pi / 2.) - mod(theta_var + theta_var_2))
-        angle_2 = mod(2. * pi + mod(chie - pi / 2.) - mod(theta_var + theta_var_2 - pi))
+        angle_1 = mod(2. * pi + mod(chis + pi / 2.) - mod(theta_var_1 + theta_var_2))
+        angle_2 = mod(2. * pi + mod(chie - pi / 2.) - mod(theta_var_1 + theta_var_2 - pi))
         if not np.isreal(angle_2):  # TODO: figure out why
             L3 = np.inf
         else:
             L3 = np.sqrt(ell ** 2 - 4. * (R ** 2)) + R * angle_1 + R * angle_2
+        del line, ell, theta_var_1, theta_var_2, angle_1, angle_2
 
         # compute L4
         line = cle - cls
-        ell = np.linalg.norm(line)
-        theta_var = np.arctan2(line.item(1), line.item(0))
-        angle_1 = mod(2. * pi + mod(chis + pi / 2.) - mod(theta_var + pi / 2.))
-        angle_2 = mod(2. * pi + mod(theta_var + pi / 2.) - mod(chie + pi / 2.))
+        theta_var_1 = np.arctan2(line.item(1), line.item(0))
+        angle_1 = mod(2. * pi + mod(chis + pi / 2.) - mod(theta_var_1 + pi / 2.))
+        angle_2 = mod(2. * pi + mod(theta_var_1 + pi / 2.) - mod(chie + pi / 2.))
         L4 = np.linalg.norm(cls - cle) + R * angle_1 + R * angle_2
+        del line, theta_var_1, angle_1, angle_2
+
         # L is the minimum distance
         L = np.min([L1, L2, L3, L4])
         idx = np.argmin([L1, L2, L3, L4])
@@ -139,20 +143,28 @@ def compute_parameters(ps, chis, pe, chie, R):
 
             line = ce - cs
             ell = np.linalg.norm(line)
-            theta_var = np.arctan2(line.item(1), line.item(0))
-            theta_var_2 = theta_var - pi / 2. + np.arcsin(2. * R / ell)
+            theta_var_1 = np.arctan2(line.item(1), line.item(0))
+            theta_var_2 = theta_var_1 - pi / 2. + np.arcsin(2. * R / ell)
 
             q1 = rotz(theta_var_2 + pi / 2.) @ e1
             w1 = cs + R * rotz(theta_var_2) @ e1
             w2 = ce + R * rotz(theta_var_2 + pi) @ e1
+            del line, ell, theta_var_1, theta_var_2
         elif idx == 2:
             cs = cls
             lams = -1
             ce = cre
             lame = +1
-            q1 = rotz(theta_var + theta_var_2 - pi / 2.) @ e1
-            w1 = cs + R * rotz(theta_var + theta_var_2) @ e1
-            w2 = ce + R * rotz(theta_var + theta_var_2 - pi) @ e1
+
+            line = ce - cs
+            ell = np.linalg.norm(line)
+            theta_var_1 = np.arctan2(line.item(1), line.item(0))
+            theta_var_2 = np.arccos(2. * R / ell)
+
+            q1 = rotz(theta_var_1 + theta_var_2 - pi / 2.) @ e1
+            w1 = cs + R * rotz(theta_var_1 + theta_var_2) @ e1
+            w2 = ce + R * rotz(theta_var_1 + theta_var_2 - pi) @ e1
+            del line, ell, theta_var_1, theta_var_2
         elif idx == 3:
             cs = cls
             lams = -1
