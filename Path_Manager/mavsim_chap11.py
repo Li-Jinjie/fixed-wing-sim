@@ -44,18 +44,40 @@ path_manager = PathManager()
 from message_types.msg_waypoints import MsgWaypoints
 
 waypoints = MsgWaypoints()
-# waypoints.type = 'straight_line'
+waypoints.type = 'straight_line'
 # waypoints.type = 'fillet'
-waypoints.type = 'dubins'
+# waypoints.type = 'dubins'
 Va = PLAN.Va0
 waypoints.add(np.array([[0, 0, -100]]).T, Va, np.radians(0), np.inf, 0, 0)
 waypoints.add(np.array([[1000, 0, -100]]).T, Va, np.radians(45), np.inf, 0, 0)
 waypoints.add(np.array([[0, 1000, -100]]).T, Va, np.radians(45), np.inf, 0, 0)
 waypoints.add(np.array([[1000, 1000, -100]]).T, Va, np.radians(-135), np.inf, 0, 0)
-waypoints.add(np.array([[0, 0, -100]]).T, Va, np.radians(0), np.inf, 0, 0)
-waypoints.add(np.array([[1000, 0, -100]]).T, Va, np.radians(45), np.inf, 0, 0)
-waypoints.add(np.array([[1000, 1000, -100]]).T, Va, np.radians(-135), np.inf, 0, 0)
-waypoints.add(np.array([[0, 1000, -100]]).T, Va, np.radians(45), np.inf, 0, 0)
+# waypoints.add(np.array([[0, 0, -100]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[1000, 0, -100]]).T, Va, np.radians(45), np.inf, 0, 0)
+# waypoints.add(np.array([[1000, 1000, -100]]).T, Va, np.radians(-135), np.inf, 0, 0)
+# waypoints.add(np.array([[0, 1000, -100]]).T, Va, np.radians(45), np.inf, 0, 0)
+
+# # parabolic
+# waypoints.add(np.array([[100, 0, -100 - 95/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[200, 0, -100 - 180/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[300, 0, -100 - 255/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[400, 0, -100 - 320/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[500, 0, -100 - 375/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[600, 0, -100 - 420/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[700, 0, -100 - 455/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[800, 0, -100 - 480/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[900, 0, -100 - 495/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[1000, 0, -100 - 500/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[1100, 0, -100 - 495/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[1200, 0, -100 - 480/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[1300, 0, -100 - 455/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[1400, 0, -100 - 420/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[1500, 0, -100 - 375/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[1600, 0, -100 - 320/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[1700, 0, -100 - 255/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[1800, 0, -100 - 180/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[1900, 0, -100 - 95/2]]).T, Va, np.radians(0), np.inf, 0, 0)
+# waypoints.add(np.array([[2000, 0, -100 - 0]]).T, Va, np.radians(0), np.inf, 0, 0)
 
 # initialize the simulation time
 sim_time = SIM.start_time
