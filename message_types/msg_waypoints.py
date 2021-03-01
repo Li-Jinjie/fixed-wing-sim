@@ -29,7 +29,7 @@ class MsgWaypoints:
         # current number of valid waypoints in memory
         self.num_waypoints = 0
         # [n, e, d] - coordinates of waypoints
-        self.ned = np.array([[],[],[]])
+        self.ned = np.array([[], [], []])
         # the airspeed that is commanded along the waypoints
         self.airspeed = np.array([])
         # the desired course at each waypoint (used only for Dubins paths)
