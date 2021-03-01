@@ -111,3 +111,9 @@ $$
 - is True和==True的区别：对于is True，只有遇到bool值True时才会执行，遇到和True一样的1时也不会执行。
 - **一定要注意变量的作用域。**如果在一段程序中同一个变量被重复赋值，则当这个变量停止作用时，应该用del命令删除！！！！！
 - TODO： 2. 将不同的路径跟踪算法解耦。
+
+
+
+### Chapter 12
+
+- edge用parent来表示，C矩阵用cost来表示，cost=distance（parent节点，当前节点）
