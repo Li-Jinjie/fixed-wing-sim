@@ -6,8 +6,8 @@
 #         4/3/2019 - Brady Moon
 #         4/11/2019 - RWB
 #         3/31/2020 - RWB
+#         2/3/2021 - LJJ
 import numpy as np
-import parameters.planner_parameters as PLAN
 from message_types.msg_waypoints import MsgWaypoints
 from Path_Manager.draw_waypoints import DrawWaypoints
 from Path_Planner.draw_map import DrawMap
@@ -27,14 +27,14 @@ class RRTStraightLine:
         # tree.type = 'straight_line'
         tree.type = 'fillet'
         # add the start pose to the tree
-        # add(ned_position, airspeed, course, cost, flag_connect_to_goal)
-        tree.add(start_pose, Va, np.inf, 0, 0, 0)
+        # add(ned_position, airspeed, course, cost, parent, flag_is_goal)
+        tree.add(start_pose, Va, np.inf, 0, -1, 0)
 
         # check to see if start_pose connects directly to end_pose
         if (distance(start_pose, end_pose) < self.segment_length) and \
                 (collision(start_pose, end_pose, world_map) is False):
             # no collision, connect directly
-            tree.add(end_pose, Va, np.inf, distance(start_pose, end_pose), 1, 1)
+            tree.add(end_pose, Va, np.inf, distance(start_pose, end_pose), 0, 1)
         else:
             num_paths = 0
             while num_paths < 3:
@@ -48,6 +48,7 @@ class RRTStraightLine:
         return waypoints
 
     def extend_tree(self, tree, end_pose, Va, world_map):
+        # refer to page 215 on uav_book
         flag_found = False
         while flag_found is False:
             # extend tree by randomly selecting pose and extending tree toward that pose
@@ -82,8 +83,7 @@ class RRTStraightLine:
                 tree.add(end_pose, Va, course, distance(v_plus, end_pose), tree.num_waypoints - 1, 1)
                 del course
 
-                # find a path!
-                flag_found = True
+                flag_found = True  # find a path!
                 break
 
         return flag_found
@@ -143,18 +143,50 @@ def get_node(waypoints, ptr):
 
 
 def find_minimum_path(tree, end_pose):
-    # find the lowest cost path to the end node
-    # find nodes that connect to end_node
-    connecting_nodes = []
+    # obj: find the lowest cost path to the end node
 
-    # find minimum cost last node
-    idx =
+    # find every end_node
+    id_end_nodes = []
+    for i in range(tree.num_waypoints):
+        if tree.is_goal[i] == 1:
+            id_end_nodes.append(i)
+
+    # find minimum cost end node
+    sum_cost_min = np.inf
+    sum_cost = 0
+    for id_end_node in id_end_nodes:
+        sum_cost += tree.cost[id_end_node]
+        idx = tree.parent[id_end_node]
+        while idx != -1:  # not origin
+            sum_cost += tree.cost[idx]
+            idx = tree.parent[idx]
+
+        if sum_cost < sum_cost_min:
+            sum_cost_min = sum_cost
+            idx_min = id_end_node
 
     # construct lowest cost path order
-    path =
+    path = []
+    idx = idx_min
+    while idx != -1:  # not origin's parent
+        path.insert(0, idx)
+        idx = tree.parent[idx]
 
     # construct waypoint path
     waypoints = MsgWaypoints()
+    for idx in path:
+        if idx == 0:
+            waypoints.add(get_node(tree, idx), tree.airspeed[idx], np.inf, 0, -1, 0)  # first node, start pose
+            parent = 0
+            continue
+        ned_now = get_node(tree, idx)
+        ned_pre = get_node(waypoints, parent)
+
+        course = np.arctan2((ned_now - ned_pre).item(1), (ned_now - ned_pre).item(0))
+
+        waypoints.add(ned_now, tree.airspeed[idx], course,
+                      distance(ned_now, ned_pre), parent, tree.is_goal[idx])
+        parent += 1
 
     return waypoints
 
@@ -175,8 +207,21 @@ def distance(start_pose, end_pose):
 
 def collision(start_pose, end_pose, world_map):
     # check to see of path from start_pose to end_pose colliding with map
-    collision_flag =
+    N = np.floor(np.linalg.norm(end_pose - start_pose) / 5.)  # every 5 meters get a point
+    points = points_along_path(start_pose, end_pose, N)
+    for point in points:
+        for p_n in range(world_map.num_city_blocks):  # North
+            for p_e in range(world_map.num_city_blocks):  # East
+                center = np.array([[world_map.building_north.item(p_n),
+                                    world_map.building_east.item(p_e),
+                                    world_map.building_height[p_n, p_e]]]).T
+                vec = point - center
+                if vec.item(0) <= world_map.building_width / 2. and \
+                        vec.item(1) <= world_map.building_width / 2. and vec.item(2) < 0:
+                    collision_flag = True
+                    return collision_flag
 
+    collision_flag = False
     return collision_flag
 
 
@@ -209,7 +254,7 @@ def points_along_path(start_pose, end_pose, N):
     points = [start_pose]
     length = np.linalg.norm(end_pose - start_pose)
     q = (end_pose - start_pose) / length
-    for i in range(1, np.floor(length / N) + 1):
+    for i in range(1, int(np.floor(length / N) + 1)):
         points.append(start_pose + i * (length / N) * q)
     return points
 

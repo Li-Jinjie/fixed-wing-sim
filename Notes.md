@@ -117,3 +117,22 @@ $$
 ### Chapter 12
 
 - edge用parent来表示，C矩阵用cost来表示，cost=distance（parent节点，当前节点）
+
+- find_minimum_path流程
+
+  - 功能：给定一个包含num_paths=3条可行路径的waypoints点集tree和end_pose， 找到cost最短的那条路径对应的点集
+  - remark：原程序不把end_node本身加进来，但这样就没办法算从end_node之前的节点到end_node之间的cost了，
+
+  1. 遍历所有节点，找到3个end_node节点（之前的步骤是每找到一条可行路径，就添加了一个end_node）
+  2. 根据parent和cost，依次计算3条线路的sum_cost, 选出最小的那个end节点的id
+  3. 根据parent的顺序写出过程中每个节点的id序列，**包括初始节点**（为了后续smooth的时候也能操作）
+  4. 构建waypoints。
+
+- collision函数流程：
+
+  - 功能：判断一系列点是不是不能到达
+
+  1. 遍历所有的point
+  2. 遍历所有的building_n
+  3. 遍历所有的building_e
+  4. 查看这个点是不是在范围内，小于则退出循环。
