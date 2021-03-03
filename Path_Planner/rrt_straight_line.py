@@ -31,32 +31,32 @@ class RRTStraightLine:
         tree.add(start_pose, Va, np.inf, 0, -1, 0)
 
         # check to see if start_pose connects directly to end_pose
-        if (distance(start_pose, end_pose) < self.segment_length) and \
-                (collision(start_pose, end_pose, world_map) is False):
+        if distance(start_pose, end_pose) < self.segment_length and not collision(start_pose, end_pose, world_map):
             # no collision, connect directly
             tree.add(end_pose, Va, np.inf, distance(start_pose, end_pose), 0, 1)
         else:
             num_paths = 0
-            while num_paths < 3:
+            while num_paths < 5:
                 if self.extend_tree(tree, end_pose, Va, world_map) is True:
                     num_paths += 1
 
         # find path with minimum cost to end_node
         waypoints_not_smooth = find_minimum_path(tree, end_pose)
         waypoints = smooth_path(waypoints_not_smooth, world_map)
-        self.plot_map(world_map, tree, waypoints_not_smooth, waypoints, radius)
+
+        self.plot_map(world_map, tree, waypoints_not_smooth, waypoints, radius)  # display all paths
         return waypoints
 
     def extend_tree(self, tree, end_pose, Va, world_map):
         # refer to page 215 on uav_book
         flag_found = False
-        while flag_found is False:
+        while not flag_found:
             # extend tree by randomly selecting pose and extending tree toward that pose
             p = random_pose(world_map, pd=end_pose.item(2))
 
             # find closest configuration
             idx_min = 0
-            len_min = 9999.
+            len_min = np.inf
             for i in range(tree.num_waypoints):
                 v = get_node(tree, i)
                 len_tmp = np.linalg.norm(p - v)
@@ -66,25 +66,26 @@ class RRTStraightLine:
             v_star = get_node(tree, idx_min)
 
             # plan path
-            length = np.linalg.norm(p - v_star)
-            v_plus = v_star + self.segment_length * ((p - v_star) / length)
+            unit_vec = (p - v_star) / np.linalg.norm(p - v_star)
+            unit_vec[2, 0] = 0  # no influence to pd
+            v_plus = v_star + self.segment_length * unit_vec
 
             # check collision from v_star to v_plus
-            if collision(v_star, v_plus, world_map) is False:
+            if not collision(v_star, v_plus, world_map):
                 course = np.arctan2((v_plus - v_star).item(1), (v_plus - v_star).item(0))
                 # no collision, add this node
                 tree.add(v_plus, Va, course, distance(v_star, v_plus), idx_min, 0)
                 del course
 
-            # check collision from v_plus to end_point
-            if collision(v_plus, end_pose, world_map) is False:
-                course = np.arctan2((end_pose - v_plus).item(1), (end_pose - v_plus).item(0))
-                # no collision, add end node directly
-                tree.add(end_pose, Va, course, distance(v_plus, end_pose), tree.num_waypoints - 1, 1)
-                del course
+                # if v_plus is added successfully, check collision from v_plus to end_point
+                if not collision(v_plus, end_pose, world_map):
+                    course = np.arctan2((end_pose - v_plus).item(1), (end_pose - v_plus).item(0))
+                    # no collision, add end node directly
+                    tree.add(end_pose, Va, course, distance(v_plus, end_pose), tree.num_waypoints - 1, 1)
+                    del course
 
-                flag_found = True  # find a path!
-                break
+                    flag_found = True  # find a path!
+                    break
 
         return flag_found
 
@@ -115,6 +116,7 @@ class RRTStraightLine:
 
 
 def smooth_path(waypoints, world_map):
+
     # smooth the waypoint path
     smooth = [0]  # add the first waypoint
     smooth_ptr = 0
@@ -123,10 +125,10 @@ def smooth_path(waypoints, world_map):
     while origin_ptr < waypoints.num_waypoints:
         w_s = get_node(waypoints, smooth[smooth_ptr])
         w_plus = get_node(waypoints, origin_ptr + 1)
-        if collision(w_s, w_plus, world_map) is True:
+        if collision(w_s, w_plus, world_map):
             smooth.append(origin_ptr)  # add deconflicted node to smoothed path
             # add cost
-            smooth_ptr += 1
+            smooth_ptr += origin_ptr
         origin_ptr += 1
 
     # construct smooth waypoint path
@@ -153,8 +155,8 @@ def find_minimum_path(tree, end_pose):
 
     # find minimum cost end node
     sum_cost_min = np.inf
-    sum_cost = 0
     for id_end_node in id_end_nodes:
+        sum_cost = 0
         sum_cost += tree.cost[id_end_node]
         idx = tree.parent[id_end_node]
         while idx != -1:  # not origin
@@ -174,6 +176,7 @@ def find_minimum_path(tree, end_pose):
 
     # construct waypoint path
     waypoints = MsgWaypoints()
+    waypoints.type = tree.type
     for idx in path:
         if idx == 0:
             waypoints.add(get_node(tree, idx), tree.airspeed[idx], np.inf, 0, -1, 0)  # first node, start pose
@@ -207,8 +210,11 @@ def distance(start_pose, end_pose):
 
 def collision(start_pose, end_pose, world_map):
     # check to see of path from start_pose to end_pose colliding with map
-    N = np.floor(np.linalg.norm(end_pose - start_pose) / 5.)  # every 5 meters get a point
+    N = np.floor(np.linalg.norm(end_pose - start_pose) / 20.)  # every 10 meters get a point
     points = points_along_path(start_pose, end_pose, N)
+
+    redundancy = 10.  # meters, redundancy to prevent the uav from hitting the building.
+
     for point in points:
         for p_n in range(world_map.num_city_blocks):  # North
             for p_e in range(world_map.num_city_blocks):  # East
@@ -216,8 +222,8 @@ def collision(start_pose, end_pose, world_map):
                                     world_map.building_east.item(p_e),
                                     world_map.building_height[p_n, p_e]]]).T
                 vec = point - center
-                if vec.item(0) <= world_map.building_width / 2. and \
-                        vec.item(1) <= world_map.building_width / 2. and vec.item(2) < 0:
+                if np.abs(vec[0, 0]) <= (world_map.building_width / 2. + redundancy) and \
+                        np.abs(vec[1, 0]) <= (world_map.building_width / 2. + redundancy) and vec.item(2) < 0:
                     collision_flag = True
                     return collision_flag
 
@@ -254,7 +260,7 @@ def points_along_path(start_pose, end_pose, N):
     points = [start_pose]
     length = np.linalg.norm(end_pose - start_pose)
     q = (end_pose - start_pose) / length
-    for i in range(1, int(np.floor(length / N) + 1)):
+    for i in range(1, int(N + 1)):
         points.append(start_pose + i * (length / N) * q)
     return points
 

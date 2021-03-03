@@ -9,7 +9,7 @@ import sys
 sys.path.append('..')
 from message_types.msg_waypoints import MsgWaypoints
 from Path_Planner.rrt_straight_line import RRTStraightLine
-from Path_Planner.rrt_dubins import RRTDubins
+# from Path_Planner.rrt_dubins import RRTDubins
 
 
 class PathPlanner:
@@ -17,7 +17,7 @@ class PathPlanner:
         # waypoints definition
         self.waypoints = MsgWaypoints()
         self.rrt_straight_line = RRTStraightLine()
-        self.rrt_dubins = RRTDubins()
+        # self.rrt_dubins = RRTDubins()
 
     def update(self, world_map, state, radius):
         print('planning...')
@@ -56,21 +56,21 @@ class PathPlanner:
             self.waypoints = self.rrt_straight_line.update(start_pose, end_pose,
                                                            desired_airspeed, world_map, radius)
 
-        elif planner_flag == 'rrt_dubins':
-            desired_airspeed = 25
-            desired_altitude = 100
-            # start pose is current pose
-            start_pose = np.array([[state.north], [state.east],
-                                   [-desired_altitude], [state.chi]])
-            # desired end pose
-            # either plan to the top-right corner of world_map
-            if np.linalg.norm(start_pose[0:2]) < world_map.city_width / 2:
-                end_pose = np.array([[world_map.city_width], [world_map.city_width],
-                                     [-desired_altitude], [state.chi]])
-            else:  # or to the bottom-left corner of world_map
-                end_pose = np.array([[0], [0], [-desired_altitude], [state.chi]])
-            self.waypoints = self.rrt_dubins.update(start_pose, end_pose,
-                                                    desired_airspeed, world_map, radius)
+        # elif planner_flag == 'rrt_dubins':
+        #     desired_airspeed = 25
+        #     desired_altitude = 100
+        #     # start pose is current pose
+        #     start_pose = np.array([[state.north], [state.east],
+        #                            [-desired_altitude], [state.chi]])
+        #     # desired end pose
+        #     # either plan to the top-right corner of world_map
+        #     if np.linalg.norm(start_pose[0:2]) < world_map.city_width / 2:
+        #         end_pose = np.array([[world_map.city_width], [world_map.city_width],
+        #                              [-desired_altitude], [state.chi]])
+        #     else:  # or to the bottom-left corner of world_map
+        #         end_pose = np.array([[0], [0], [-desired_altitude], [state.chi]])
+        #     self.waypoints = self.rrt_dubins.update(start_pose, end_pose,
+        #                                             desired_airspeed, world_map, radius)
         else:
             print("Error in Path Planner: Undefined planner type.")
         self.waypoints.plot_updated = False

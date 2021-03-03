@@ -38,9 +38,9 @@ class MsgWaypoints:
         # these last three variables are used by the path planner running cost at each node
         self.cost = np.array([])
         # index of the parent to the node
-        self.parent = np.array([])
+        self.parent = np.array([]).astype(np.int)
         # can this node connect to the goal?
-        self.connect_to_goal = np.array([])
+        self.is_goal = np.array([])
 
     def add(self, ned=np.array([[0, 0, 0]]).T, airspeed=0,
             course=np.inf, cost=0, parent=0, connect_to_goal=0):
@@ -50,4 +50,4 @@ class MsgWaypoints:
         self.course = np.append(self.course, course)
         self.cost = np.append(self.cost, cost)
         self.parent = np.append(self.parent, parent)
-        self.connect_to_goal = np.append(self.connect_to_goal, connect_to_goal)
+        self.is_goal = np.append(self.is_goal, connect_to_goal)
