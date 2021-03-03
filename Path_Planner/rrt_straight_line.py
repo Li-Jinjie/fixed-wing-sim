@@ -116,31 +116,45 @@ class RRTStraightLine:
 
 
 def smooth_path(waypoints, world_map):
-
     # smooth the waypoint path
     smooth = [0]  # add the first waypoint
-    smooth_ptr = 0
-    origin_ptr = 1
+    smooth_ptr = 0  # i
+    origin_ptr = 1  # j
 
-    while origin_ptr < waypoints.num_waypoints:
-        w_s = get_node(waypoints, smooth[smooth_ptr])
+    while origin_ptr < waypoints.num_waypoints - 1:
+        w_s = get_node(waypoints, smooth_ptr)
         w_plus = get_node(waypoints, origin_ptr + 1)
         if collision(w_s, w_plus, world_map):
             smooth.append(origin_ptr)  # add deconflicted node to smoothed path
             # add cost
-            smooth_ptr += origin_ptr
+            smooth_ptr = origin_ptr
         origin_ptr += 1
+    smooth.append(origin_ptr)  # add end node
 
     # construct smooth waypoint path
     smooth_waypoints = MsgWaypoints()
-    for ptr in smooth:
-        smooth_waypoints.add(get_node(waypoints, ptr), waypoints.airspeed[ptr], waypoints.course[ptr],
-                             waypoints.cost[ptr])
+    smooth_waypoints.type = waypoints.type
+    parent = 0
+    for idx in smooth:
+        if idx == 0:
+            smooth_waypoints.add(get_node(waypoints, idx), waypoints.airspeed[idx], np.inf, 0, -1, 0)  # first node, start pose
+            continue
+        ned_now = get_node(waypoints, idx)
+        ned_pre = get_node(smooth_waypoints, parent)
+
+        course = np.arctan2((ned_now - ned_pre).item(1), (ned_now - ned_pre).item(0))
+
+        smooth_waypoints.add(ned_now, waypoints.airspeed[idx], course,
+                      distance(ned_now, ned_pre), parent, waypoints.is_goal[idx])
+        parent += 1
 
     return smooth_waypoints
 
 
 def get_node(waypoints, ptr):
+    if ptr > waypoints.num_waypoints - 1:
+        raise ValueError("Index is out of the range of waypoints!")
+
     return waypoints.ned[:, ptr: ptr + 1]
 
 
@@ -177,10 +191,10 @@ def find_minimum_path(tree, end_pose):
     # construct waypoint path
     waypoints = MsgWaypoints()
     waypoints.type = tree.type
+    parent = 0
     for idx in path:
         if idx == 0:
             waypoints.add(get_node(tree, idx), tree.airspeed[idx], np.inf, 0, -1, 0)  # first node, start pose
-            parent = 0
             continue
         ned_now = get_node(tree, idx)
         ned_pre = get_node(waypoints, parent)
