@@ -24,11 +24,11 @@ class MsgWorldMap:
         # maximum height of buildings
         self.building_max_height = PLAN.building_height
         # an array of building heights
-        self.building_height = PLAN.building_height * np.random.rand(PLAN.num_blocks, PLAN.num_blocks)
+        self.building_height = self.building_max_height * np.random.rand(PLAN.num_blocks, PLAN.num_blocks)
         # the width of the buildings (all the same)
         self.building_width = PLAN.city_width / PLAN.num_blocks * (1 - PLAN.street_width)
         # north coordinate of center of buildings
-        self.building_north = np.zeros((1,PLAN.num_blocks))
+        self.building_north = np.zeros((1, PLAN.num_blocks))
         for i in range(PLAN.num_blocks):
             self.building_north[0, i] = 0.5 * (PLAN.city_width / PLAN.num_blocks) * (2 * i + 1)
         # east coordinate of center of buildings

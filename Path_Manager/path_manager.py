@@ -5,6 +5,7 @@ sys.path.append('..')
 from Path_Manager.dubins_parameters import DubinsParameters
 from message_types.msg_path import MsgPath
 
+
 # TODO: separate several path manager algorithm into different python files.
 class PathManager:
     def __init__(self):
@@ -21,6 +22,8 @@ class PathManager:
         self.manager_state = 1
         self.manager_requests_waypoints = True
         self.dubins_path = DubinsParameters()
+        # flag of end point
+        self.flag_end_point = False
 
     def update(self, waypoints, radius, state):
         self.num_waypoints = waypoints.num_waypoints
@@ -29,6 +32,7 @@ class PathManager:
         if self.manager_requests_waypoints is True \
                 and waypoints.flag_waypoints_changed is True:
             self.manager_requests_waypoints = False
+            self.flag_end_point = False
         if waypoints.type == 'straight_line':
             self.line_manager(waypoints, state)
         elif waypoints.type == 'fillet':
@@ -106,6 +110,13 @@ class PathManager:
 
         # state machine for fillet path
         if self.inHalfSpace(mav_pos) is True:
+
+            # if fly to the end node, planning again
+            if self.flag_end_point:
+                self.manager_requests_waypoints = True
+                return
+
+            # normal mode
             if self.manager_state == 1:
                 self.construct_fillet_circle(waypoints, radius)
                 self.manager_state = 2
@@ -115,29 +126,38 @@ class PathManager:
                 self.manager_state = 1
 
     def construct_fillet_line(self, waypoints, radius):
+        flag_end_point = False
+
         w_previous = waypoints.ned[:, self.ptr_previous:self.ptr_previous + 1]
         if self.ptr_current == 9999:
             w_current = None  # TODO: fix this
         else:
             w_current = waypoints.ned[:, self.ptr_current:self.ptr_current + 1]
-        if self.ptr_next == 9999:
-            w_next = None  # TODO: fix this
+        if self.ptr_next == waypoints.num_waypoints:  # the current point is the end point
+            self.flag_end_point = True  # TODO: fix this
         else:
             w_next = waypoints.ned[:, self.ptr_next:self.ptr_next + 1]
 
         # update path variables
+
         q_previous = (w_current - w_previous) / np.linalg.norm(w_current - w_previous)
-        q_current = (w_next - w_current) / np.linalg.norm(w_next - w_current)
-        rhovar = np.arccos(-q_previous.T @ q_current)
-
-        z = w_current - (radius / np.tan(rhovar / 2.)) * q_previous
-
         self.path.type = 'line'
         self.path.line_origin = w_previous
         self.path.line_direction = q_previous
         self.path.plot_updated = False
 
         # update half plane variables
+        # end_point, special condition
+        if self.flag_end_point:
+            self.halfspace_r = w_current
+            self.halfspace_n = q_previous
+            return
+
+        q_current = (w_next - w_current) / np.linalg.norm(w_next - w_current)
+        rhovar = np.arccos(-q_previous.T @ q_current)
+
+        z = w_current - (radius / np.tan(rhovar / 2.)) * q_previous
+
         self.halfspace_r = z
         self.halfspace_n = q_previous
 
