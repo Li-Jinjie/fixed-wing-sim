@@ -29,7 +29,7 @@ class RRTStraightLine:
         tree.type = 'fillet'
         # add the start pose to the tree
         # add(ned_position, airspeed, course, cost, parent, flag_is_goal)
-        tree.add(start_pose, Va, np.inf, 0, -1, 0)
+        tree.add(start_pose, Va, 0, 0, -1, 0)
 
         # check to see if start_pose connects directly to end_pose
         if distance(start_pose, end_pose) < self.segment_length and not collision(start_pose, end_pose, world_map):
@@ -45,7 +45,8 @@ class RRTStraightLine:
         waypoints_not_smooth = find_minimum_path(tree, end_pose)
         waypoints = smooth_path(waypoints_not_smooth, world_map)
 
-        self.plot_map(world_map, tree, waypoints_not_smooth, waypoints, radius)  # display all paths
+        # draw all planning results
+        self.plot_map(world_map, tree, waypoints_not_smooth, waypoints, radius)  # display all paths. only draw once
         return waypoints
 
     def extend_tree(self, tree, end_pose, Va, world_map):
@@ -95,7 +96,7 @@ class RRTStraightLine:
         # initialize Qt gui application and window
         self.plot_app = pg.QtGui.QApplication([])  # initialize QT
         self.plot_window = gl.GLViewWidget()  # initialize the view object
-        self.plot_window.setWindowTitle('World Viewer')
+        self.plot_window.setWindowTitle('World Viewer: Paths')
         self.plot_window.setGeometry(0, 0, 1500, 1500)  # args: upper_left_x, upper_right_y, width, height
         grid = gl.GLGridItem()  # make a grid to represent the ground
         grid.scale(scale / 20, scale / 20, scale / 20)  # set the size of the grid (distance between each line)
