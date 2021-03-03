@@ -6,6 +6,7 @@ mavsim_python
         2/27/2020 - RWB
 """
 import sys
+
 sys.path.append('..')
 import numpy as np
 import parameters.simulation_parameters as SIM
@@ -22,13 +23,13 @@ from Path_Planner.path_planner import PathPlanner
 from Kinematics_and_Dynamics.data_viewer import DataViewer
 from Path_Planner.world_viewer import WorldViewer
 
-
 # initialize the visualization
 VIDEO = False  # True==write video, False==don't write video
 world_view = WorldViewer()  # initialize the viewer
 data_view = DataViewer()  # initialize view of data plots
 if VIDEO is True:
     from Coordinate_Frames.video_writer import VideoWriter
+
     video = VideoWriter(video_name="chap12_video.avi",
                         bounding_box=(0, 0, 1000, 1000),
                         output_rate=SIM.ts_video)
@@ -43,8 +44,8 @@ path_manager = PathManager()
 path_planner = PathPlanner()
 
 from message_types.msg_world_map import MsgWorldMap
-world_map = MsgWorldMap()
 
+world_map = MsgWorldMap()
 
 # initialize the simulation time
 sim_time = SIM.start_time
@@ -60,7 +61,7 @@ while sim_time < SIM.end_time:
     # -------path planner - ----
     if path_manager.manager_requests_waypoints is True:
         # waypoints = path_planner.update(world_map, estimated_state, PLAN.R_min)
-        waypoints = path_planner.update(world_map, mav.true_state, PLAN.R_min) # for debugging
+        waypoints = path_planner.update(world_map, mav.true_state, PLAN.R_min)  # for debugging
 
     # -------path manager-------------
     # path = path_manager.update(waypoints, PLAN.R_min, estimated_state)
@@ -96,7 +97,3 @@ while sim_time < SIM.end_time:
 
 if VIDEO is True:
     video.close()
-
-
-
-
