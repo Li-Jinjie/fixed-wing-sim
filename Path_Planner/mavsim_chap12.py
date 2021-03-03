@@ -59,16 +59,20 @@ while sim_time < SIM.end_time:
 
     # -------path planner - ----
     if path_manager.manager_requests_waypoints is True:
-        waypoints = path_planner.update(world_map, estimated_state, PLAN.R_min)
+        # waypoints = path_planner.update(world_map, estimated_state, PLAN.R_min)
+        waypoints = path_planner.update(world_map, mav.true_state, PLAN.R_min) # for debugging
 
     # -------path manager-------------
-    path = path_manager.update(waypoints, PLAN.R_min, estimated_state)
+    # path = path_manager.update(waypoints, PLAN.R_min, estimated_state)
+    path = path_manager.update(waypoints, PLAN.R_min, mav.true_state)  # for debugging
 
     # -------path follower-------------
-    autopilot_commands = path_follower.update(path, estimated_state)
+    # autopilot_commands = path_follower.update(path, estimated_state)
+    autopilot_commands = path_follower.update(path, mav.true_state)  # for debugging
 
     # -------autopilot-------------
-    delta, commanded_state = autopilot.update(autopilot_commands, estimated_state)
+    # delta, commanded_state = autopilot.update(autopilot_commands, estimated_state)
+    delta, commanded_state = autopilot.update(autopilot_commands, mav.true_state)  # for debugging
 
     # -------physical system-------------
     current_wind = wind.update()  # get the new wind vector
