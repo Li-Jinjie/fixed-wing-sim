@@ -108,9 +108,9 @@ class RRTStraightLine:
         red = np.array([[204, 0, 0]]) / 255.
         green = np.array([[0, 153, 51]]) / 255.
         DrawMap(world_map, self.plot_window)
+        draw_tree(tree, green, self.plot_window)
         DrawWaypoints(waypoints, radius, blue, self.plot_window)
         DrawWaypoints(smoothed_waypoints, radius, red, self.plot_window)
-        draw_tree(tree, green, self.plot_window)
         # draw things to the screen
         self.plot_app.processEvents()
 
@@ -137,7 +137,8 @@ def smooth_path(waypoints, world_map):
     parent = 0
     for idx in smooth:
         if idx == 0:
-            smooth_waypoints.add(get_node(waypoints, idx), waypoints.airspeed[idx], np.inf, 0, -1, 0)  # first node, start pose
+            smooth_waypoints.add(get_node(waypoints, idx), waypoints.airspeed[idx], np.inf, 0, -1,
+                                 0)  # first node, start pose
             continue
         ned_now = get_node(waypoints, idx)
         ned_pre = get_node(smooth_waypoints, parent)
@@ -145,8 +146,11 @@ def smooth_path(waypoints, world_map):
         course = np.arctan2((ned_now - ned_pre).item(1), (ned_now - ned_pre).item(0))
 
         smooth_waypoints.add(ned_now, waypoints.airspeed[idx], course,
-                      distance(ned_now, ned_pre), parent, waypoints.is_goal[idx])
+                             distance(ned_now, ned_pre), parent, waypoints.is_goal[idx])
         parent += 1
+
+    if smooth_waypoints.num_waypoints != waypoints.num_waypoints:
+        smooth_waypoints = smooth_path(smooth_waypoints, world_map)  # recursion!
 
     return smooth_waypoints
 
