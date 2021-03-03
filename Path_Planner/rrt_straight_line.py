@@ -20,6 +20,7 @@ class RRTStraightLine:
         self.segment_length = 300  # standard length of path segments
         self.plot_window = []
         self.plot_app = []
+        self.num_paths = 10
 
     def update(self, start_pose, end_pose, Va, world_map, radius):
         # generate tree
@@ -36,7 +37,7 @@ class RRTStraightLine:
             tree.add(end_pose, Va, np.inf, distance(start_pose, end_pose), 0, 1)
         else:
             num_paths = 0
-            while num_paths < 10:
+            while num_paths < self.num_paths:
                 if self.extend_tree(tree, end_pose, Va, world_map) is True:
                     num_paths += 1
 
@@ -115,46 +116,6 @@ class RRTStraightLine:
         self.plot_app.processEvents()
 
 
-def smooth_path(waypoints, world_map):
-    # smooth the waypoint path
-    smooth = [0]  # add the first waypoint
-    smooth_ptr = 0  # i
-    origin_ptr = 1  # j
-
-    while origin_ptr < waypoints.num_waypoints - 1:
-        w_s = get_node(waypoints, smooth_ptr)
-        w_plus = get_node(waypoints, origin_ptr + 1)
-        if collision(w_s, w_plus, world_map):
-            smooth.append(origin_ptr)  # add deconflicted node to smoothed path
-            # add cost
-            smooth_ptr = origin_ptr
-        origin_ptr += 1
-    smooth.append(origin_ptr)  # add end node
-
-    # construct smooth waypoint path
-    smooth_waypoints = MsgWaypoints()
-    smooth_waypoints.type = waypoints.type
-    parent = 0
-    for idx in smooth:
-        if idx == 0:
-            smooth_waypoints.add(get_node(waypoints, idx), waypoints.airspeed[idx], np.inf, 0, -1,
-                                 0)  # first node, start pose
-            continue
-        ned_now = get_node(waypoints, idx)
-        ned_pre = get_node(smooth_waypoints, parent)
-
-        course = np.arctan2((ned_now - ned_pre).item(1), (ned_now - ned_pre).item(0))
-
-        smooth_waypoints.add(ned_now, waypoints.airspeed[idx], course,
-                             distance(ned_now, ned_pre), parent, waypoints.is_goal[idx])
-        parent += 1
-
-    if smooth_waypoints.num_waypoints != waypoints.num_waypoints:
-        smooth_waypoints = smooth_path(smooth_waypoints, world_map)  # recursion!
-
-    return smooth_waypoints
-
-
 def get_node(waypoints, ptr):
     if ptr > waypoints.num_waypoints - 1:
         raise ValueError("Index is out of the range of waypoints!")
@@ -210,6 +171,46 @@ def find_minimum_path(tree, end_pose):
         parent += 1
 
     return waypoints
+
+
+def smooth_path(waypoints, world_map):
+    # smooth the waypoint path
+    smooth = [0]  # add the first waypoint
+    smooth_ptr = 0  # i
+    origin_ptr = 1  # j
+
+    while origin_ptr < waypoints.num_waypoints - 1:
+        w_s = get_node(waypoints, smooth_ptr)
+        w_plus = get_node(waypoints, origin_ptr + 1)
+        if collision(w_s, w_plus, world_map):
+            smooth.append(origin_ptr)  # add deconflicted node to smoothed path
+            # add cost
+            smooth_ptr = origin_ptr
+        origin_ptr += 1
+    smooth.append(origin_ptr)  # add end node
+
+    # construct smooth waypoint path
+    smooth_waypoints = MsgWaypoints()
+    smooth_waypoints.type = waypoints.type
+    parent = 0
+    for idx in smooth:
+        if idx == 0:
+            smooth_waypoints.add(get_node(waypoints, idx), waypoints.airspeed[idx], np.inf, 0, -1,
+                                 0)  # first node, start pose
+            continue
+        ned_now = get_node(waypoints, idx)
+        ned_pre = get_node(smooth_waypoints, parent)
+
+        course = np.arctan2((ned_now - ned_pre).item(1), (ned_now - ned_pre).item(0))
+
+        smooth_waypoints.add(ned_now, waypoints.airspeed[idx], course,
+                             distance(ned_now, ned_pre), parent, waypoints.is_goal[idx])
+        parent += 1
+
+    if smooth_waypoints.num_waypoints != waypoints.num_waypoints:
+        smooth_waypoints = smooth_path(smooth_waypoints, world_map)  # recursion!
+
+    return smooth_waypoints
 
 
 def random_pose(world_map, pd):
