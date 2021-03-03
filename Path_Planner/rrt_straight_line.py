@@ -36,7 +36,7 @@ class RRTStraightLine:
             tree.add(end_pose, Va, np.inf, distance(start_pose, end_pose), 0, 1)
         else:
             num_paths = 0
-            while num_paths < 5:
+            while num_paths < 10:
                 if self.extend_tree(tree, end_pose, Va, world_map) is True:
                     num_paths += 1
 
@@ -109,8 +109,8 @@ class RRTStraightLine:
         green = np.array([[0, 153, 51]]) / 255.
         DrawMap(world_map, self.plot_window)
         draw_tree(tree, green, self.plot_window)
-        DrawWaypoints(waypoints, radius, blue, self.plot_window)
-        DrawWaypoints(smoothed_waypoints, radius, red, self.plot_window)
+        DrawWaypoints(waypoints, radius, red, self.plot_window)
+        DrawWaypoints(smoothed_waypoints, radius, blue, self.plot_window)
         # draw things to the screen
         self.plot_app.processEvents()
 
@@ -228,7 +228,7 @@ def distance(start_pose, end_pose):
 
 def collision(start_pose, end_pose, world_map):
     # check to see of path from start_pose to end_pose colliding with map
-    N = np.floor(np.linalg.norm(end_pose - start_pose) / 20.)  # every 10 meters get a point
+    N = np.floor(np.linalg.norm(end_pose - start_pose) / 10.)  # every 10 meters get a point
     points = points_along_path(start_pose, end_pose, N)
 
     redundancy = 10.  # meters, redundancy to prevent the uav from hitting the building.
@@ -236,13 +236,12 @@ def collision(start_pose, end_pose, world_map):
     for point in points:
         for p_n in range(world_map.num_city_blocks):  # North
             for p_e in range(world_map.num_city_blocks):  # East
-                center = np.array([[world_map.building_north.item(p_n),
-                                    world_map.building_east.item(p_e),
-                                    world_map.building_height[p_n, p_e]]]).T
-                vec = point - center
-                if np.abs(vec[0, 0]) <= (world_map.building_width / 2. + redundancy) and \
-                        np.abs(vec[1, 0]) <= (world_map.building_width / 2. + redundancy) and vec.item(2) < 0:
+                safe_distance = world_map.building_width / 2. + redundancy
+                if world_map.building_height[p_n, p_e] > np.abs(point.item(2)) and \
+                        np.abs(point.item(0) - world_map.building_north.item(p_n)) <= safe_distance and \
+                        np.abs(point.item(1) - world_map.building_north.item(p_e)) <= safe_distance:
                     collision_flag = True
+                    point.item(0) - world_map.building_north.item(p_n)
                     return collision_flag
 
     collision_flag = False
@@ -253,7 +252,7 @@ def height_above_ground(world_map, point):
     # find the altitude of point above ground level
     point_height = point.item(2)
     map_height = 0  # TODO: check this line
-    h_agl = point_height - map_height
+    h_agl = - (point_height - map_height)
     return h_agl
 
 
