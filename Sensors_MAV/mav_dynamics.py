@@ -65,6 +65,7 @@ class MavDynamics:
         # update velocity data and forces and moments
         self._update_velocity_data()
         self._forces_moments(delta=MsgDelta())
+        self._update_true_state()
 
     ###################################
     # public functions
