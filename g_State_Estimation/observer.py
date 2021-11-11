@@ -17,22 +17,23 @@ import parameters.sensor_parameters as SENSOR
 import parameters.aerosonde_parameters as MAV
 from tools.wrap import wrap
 from message_types.msg_state import MsgState
+from message_types.msg_sensors import MsgSensors
 
 
 class Observer:
-    def __init__(self, ts_control, initial_state):
+    def __init__(self, ts_control, initial_state=MsgState(), initial_measurements=MsgSensors()):
         # initialized estimated state message
         self.estimated_state = initial_state
         # use alpha filters to low pass filter gyros and accels
-        self.lpf_gyro_x = AlphaFilter(alpha=0.5)
-        self.lpf_gyro_y = AlphaFilter(alpha=0.2)
-        self.lpf_gyro_z = AlphaFilter(alpha=0.8)
-        self.lpf_accel_x = AlphaFilter(alpha=0.5)
-        self.lpf_accel_y = AlphaFilter(alpha=0.5)
-        self.lpf_accel_z = AlphaFilter(alpha=0.5)
+        self.lpf_gyro_x = AlphaFilter(alpha=0.5, y0=initial_measurements.gyro_x)
+        self.lpf_gyro_y = AlphaFilter(alpha=0.2, y0=initial_measurements.gyro_y)
+        self.lpf_gyro_z = AlphaFilter(alpha=0.8, y0=initial_measurements.gyro_z)
+        self.lpf_accel_x = AlphaFilter(alpha=0.5, y0=initial_measurements.accel_x)
+        self.lpf_accel_y = AlphaFilter(alpha=0.5, y0=initial_measurements.accel_y)
+        self.lpf_accel_z = AlphaFilter(alpha=0.5, y0=initial_measurements.accel_z)
         # use alpha filters to low pass filter absolute and differential pressure
-        self.lpf_abs = AlphaFilter(alpha=0.9, y0=MAV.rho * MAV.gravity * -MAV.down0)
-        self.lpf_diff = AlphaFilter(alpha=0.5, y0=(MAV.rho * (MAV.Va0 ** 2.)) / 2.)
+        self.lpf_abs = AlphaFilter(alpha=0.9, y0=initial_measurements.abs_pressure)
+        self.lpf_diff = AlphaFilter(alpha=0.5, y0=initial_measurements.diff_pressure)
         # ekf for phi and theta
         self.attitude_ekf = EkfAttitude()
         # ekf for pn, pe, Vg, chi, wn, we, psi
