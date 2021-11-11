@@ -2,7 +2,7 @@ import sys
 
 sys.path.append('..')
 import numpy as np
-import Linear_Design_Models.model_coef as TF
+import d_Linear_Design_Models.model_coef as TF
 import parameters.aerosonde_parameters as MAV
 
 gravity = MAV.gravity  # gravity constant

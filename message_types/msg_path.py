@@ -8,7 +8,7 @@ part of mavsim_python
         3/11/2019 - RWB
 """
 import numpy as np
-import Linear_Design_Models.model_coef as TF
+import d_Linear_Design_Models.model_coef as TF
 
 
 class MsgPath:
