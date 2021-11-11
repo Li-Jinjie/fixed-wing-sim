@@ -14,10 +14,10 @@ class Signals:
                  frequency=1.0,
                  start_time=0.0,
                  duration=0.01,
-                 dc_offset = 0.0):
+                 dc_offset=0.0):
         self.amplitude = amplitude
         self.frequency = frequency  # radians/sec
-        self.period = 1.0/frequency
+        self.period = 1.0 / frequency
         self.start_time = start_time  # sec
         self.duration = duration
         self.dc_offset = dc_offset
@@ -34,7 +34,7 @@ class Signals:
     def sinusoid(self, time):
         '''sinusoidal function'''
         if time >= self.start_time:
-            y = self.amplitude*np.sin(self.frequency * time)
+            y = self.amplitude * np.sin(self.frequency * time)
         else:
             y = 0.0
         return y + self.dc_offset
@@ -56,7 +56,28 @@ class Signals:
         if time < self.start_time:
             y = 0.0
         else:
-            y = self.amplitude * (time-self.last_switch)
+            y = self.amplitude * (time - self.last_switch)
+        if time >= self.last_switch + self.period:
+            self.last_switch = time
+        return y + self.dc_offset
+
+    def trapezoid(self, time):
+        '''trapezoidal wave function'''
+        k = 0.075  # transition fraction (fraction of wave period of rise/fall: 0 to 0.25 )
+        if time < self.start_time:
+            y = 0.0
+        elif time < (self.last_switch + k * self.period):
+            y = self.amplitude * (time - self.last_switch) / (k * self.period)
+        elif time < (self.last_switch + (0.5 - k) * self.period):
+            y = self.amplitude
+        elif time < (self.last_switch + (0.5 + k) * self.period):
+            y = self.amplitude - self.amplitude * (time - (self.last_switch + (0.5 - k) * self.period)) / (
+                    k * self.period)
+        elif time < (self.last_switch + (1 - k) * self.period):
+            y = -self.amplitude
+        else:
+            y = -self.amplitude + self.amplitude * (time - (self.last_switch + (1 - k) * self.period)) / (
+                    k * self.period)
         if time >= self.last_switch + self.period:
             self.last_switch = time
         return y + self.dc_offset
@@ -64,12 +85,11 @@ class Signals:
     def impulse(self, time):
         '''impulse function'''
         if (time >= self.start_time) \
-                and (time <= self.start_time+self.duration):
+                and (time <= self.start_time + self.duration):
             y = self.amplitude
         else:
             y = 0.0
         return y + self.dc_offset
-
 
     def doublet(self, time):
         '''doublet function'''
@@ -77,7 +97,7 @@ class Signals:
                 and (time < self.start_time + self.duration):
             y = self.amplitude
         elif (time >= self.start_time + self.duration) \
-                and (time <= self.start_time + 2*self.duration):
+                and (time <= self.start_time + 2 * self.duration):
             y = -self.amplitude
         else:
             y = 0.0
@@ -86,10 +106,11 @@ class Signals:
     def random(self, time):
         '''random function'''
         if (time >= self.start_time):
-            y = self.amplitude*np.random.randn()
+            y = self.amplitude * np.random.randn()
         else:
             y = 0.0
         return y + self.dc_offset
+
 
 if __name__ == "__main__":
     # instantiate the system
@@ -99,23 +120,23 @@ if __name__ == "__main__":
     # main simulation loop
     sim_time = -1.0
     time = [sim_time]
-    #output = [input.sinusoid(sim_time)]
-    #output = [input.step(sim_time)]
-    #output = [input.impulse(sim_time)]
-    #output = [input.doublet(sim_time)]
-    #output = [input.random(sim_time)]
-    #output = [input.square(sim_time)]
+    # output = [input.sinusoid(sim_time)]
+    # output = [input.step(sim_time)]
+    # output = [input.impulse(sim_time)]
+    # output = [input.doublet(sim_time)]
+    # output = [input.random(sim_time)]
+    # output = [input.square(sim_time)]
     output = [input.sawtooth(sim_time)]
     while sim_time < 10.0:
-        #y = input.sinusoid(sim_time)
-        #y = input.step(sim_time)
-        #y = input.impulse(sim_time)
-        #y = input.doublet(sim_time)
-        #y = input.random(sim_time)
-        #y = input.square(sim_time)
+        # y = input.sinusoid(sim_time)
+        # y = input.step(sim_time)
+        # y = input.impulse(sim_time)
+        # y = input.doublet(sim_time)
+        # y = input.random(sim_time)
+        # y = input.square(sim_time)
         y = input.sawtooth(sim_time)
 
-        sim_time += Ts   # increment the simulation time
+        sim_time += Ts  # increment the simulation time
 
         # update date for plotting
         time.append(sim_time)
@@ -124,5 +145,3 @@ if __name__ == "__main__":
     # plot output vs time
     plt.plot(time, output)
     plt.show()
-
-
