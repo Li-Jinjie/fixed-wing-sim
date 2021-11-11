@@ -65,7 +65,8 @@ while sim_time < SIM.end_time:
     # current_wind = wind.update()  # get the new wind vector
     current_wind = np.zeros((6, 1))
     # this input excites the phugoid mode by adding an impulse at t=5.0
-    # delta[0][0] += input_signal.impulse(sim_time)
+    # delta.elevator += input_signal.impulse(sim_time)
+    # delta.rudder += input_signal.doublet(sim_time)
     mav.update(delta, current_wind)  # propagate the MAV dynamics
 
     # -------update viewer-------------
