@@ -35,7 +35,7 @@ if VIDEO is True:
 wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
 autopilot = Autopilot(SIM.ts_simulation)
-observer = Observer(SIM.ts_simulation)
+observer = Observer(SIM.ts_simulation, mav.true_state)
 
 # autopilot commands
 from message_types.msg_autopilot import MsgAutopilot
