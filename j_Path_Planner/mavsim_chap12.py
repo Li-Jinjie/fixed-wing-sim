@@ -9,6 +9,7 @@ import sys
 
 sys.path.append('..')
 import numpy as np
+import copy
 import parameters.simulation_parameters as SIM
 import parameters.planner_parameters as PLAN
 
@@ -38,7 +39,8 @@ if VIDEO is True:
 wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
 autopilot = Autopilot(SIM.ts_simulation)
-observer = Observer(SIM.ts_simulation)
+initial_state = copy.deepcopy(mav.true_state)
+observer = Observer(SIM.ts_simulation, initial_state)
 path_follower = PathFollower()
 path_manager = PathManager()
 path_planner = PathPlanner()

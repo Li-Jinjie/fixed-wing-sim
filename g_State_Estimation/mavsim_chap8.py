@@ -9,6 +9,7 @@ import sys
 
 sys.path.append('..')
 import numpy as np
+import copy
 import parameters.simulation_parameters as SIM
 
 from a_Coordinate_Frames.mav_viewer import MavViewer
@@ -35,7 +36,8 @@ if VIDEO is True:
 wind = WindSimulation(SIM.ts_simulation)
 mav = MavDynamics(SIM.ts_simulation)
 autopilot = Autopilot(SIM.ts_simulation)
-observer = Observer(SIM.ts_simulation, mav.true_state)
+initial_state = copy.deepcopy(mav.true_state)
+observer = Observer(SIM.ts_simulation, initial_state)
 
 # autopilot commands
 from message_types.msg_autopilot import MsgAutopilot
