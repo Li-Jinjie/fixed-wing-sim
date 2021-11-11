@@ -7,6 +7,7 @@ mavsim_python: mav viewer (for chapter 2)
         3/31/2020 - RWB
 """
 import sys
+
 sys.path.append("..")
 import numpy as np
 import pyqtgraph as pg
@@ -22,14 +23,14 @@ class MavViewer():
         self.window = gl.GLViewWidget()  # initialize the view object
         self.window.setWindowTitle('MAV Viewer')
         self.window.setGeometry(0, 0, 1000, 1000)  # args: upper_left_x, upper_right_y, width, height
-        grid = gl.GLGridItem() # make a grid to represent the ground
-        grid.scale(20, 20, 20) # set the size of the grid (distance between each line)
-        self.window.addItem(grid) # add grid to viewer
-        self.window.setCameraPosition(distance=200) # distance from center of plot to camera
+        grid = gl.GLGridItem()  # make a grid to represent the ground
+        grid.scale(20, 20, 20)  # set the size of the grid (distance between each line)
+        self.window.addItem(grid)  # add grid to viewer
+        self.window.setCameraPosition(distance=200)  # distance from center of plot to camera
         self.window.setBackgroundColor('k')  # set background color to black
         self.window.show()  # display configured window
-        self.window.raise_() # bring window to the front
-        self.plot_initialized = False # has the mav been plotted yet?
+        self.window.raise_()  # bring window to the front
+        self.plot_initialized = False  # has the mav been plotted yet?
         self.mav_plot = []
 
     def update(self, state):
