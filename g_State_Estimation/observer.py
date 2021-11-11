@@ -20,9 +20,9 @@ from message_types.msg_state import MsgState
 
 
 class Observer:
-    def __init__(self, ts_control):
+    def __init__(self, ts_control, initial_state):
         # initialized estimated state message
-        self.estimated_state = MsgState()
+        self.estimated_state = initial_state
         # use alpha filters to low pass filter gyros and accels
         self.lpf_gyro_x = AlphaFilter(alpha=0.5)
         self.lpf_gyro_y = AlphaFilter(alpha=0.2)
