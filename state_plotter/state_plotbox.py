@@ -10,7 +10,7 @@ class StatePlotbox():
         ''' Create a new plotbox wrapper object
 
         Arguments:
-            window (pg.GraphicsWindow): pyqtgraph window object in which to
+            window (pg.GraphicsLayoutWidget): pyqtgraph window object in which to
                 place this plotbox
             args (PlotboxArgs object): PlotboxArgs object which holds all the
                 appropriate arguments for the plotbox

@@ -121,7 +121,7 @@ class RRTDubins:
     def plot_map(self, world_map, tree, waypoints, smoothed_waypoints, radius):
         scale = 4000
         # initialize Qt gui application and window
-        self.plot_app = pg.QtGui.QApplication([])  # initialize QT
+        self.plot_app = pg.QtWidgets.QApplication([])  # initialize QT
         self.plot_window = gl.GLViewWidget()  # initialize the view object
         self.plot_window.setWindowTitle('World Viewer')
         self.plot_window.setGeometry(0, 0, 1500, 1500)  # args: upper_left_x, upper_right_y, width, height

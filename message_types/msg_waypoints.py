@@ -38,7 +38,7 @@ class MsgWaypoints:
         # these last three variables are used by the path planner running cost at each node
         self.cost = np.array([])
         # index of the parent to the node
-        self.parent = np.array([]).astype(np.int)
+        self.parent = np.array([]).astype(np.int64)
         # can this node connect to the goal?
         self.is_goal = np.array([])
 

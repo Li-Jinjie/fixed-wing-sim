@@ -19,7 +19,7 @@ class WorldViewer:
     def __init__(self):
         self.scale = 4000
         # initialize Qt gui application and window
-        self.app = pg.QtGui.QApplication([])  # initialize QT
+        self.app = pg.QtWidgets.QApplication([])  # initialize QT
         self.window = gl.GLViewWidget()  # initialize the view object
         self.window.setWindowTitle('World Viewer')
         self.window.setGeometry(0, 0, 1500, 1500)  # args: upper_left_x, upper_right_y, width, height
